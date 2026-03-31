@@ -1,25 +1,27 @@
 {
   "expo": {
-    "name": "dpressao",
+    "name": "dPressão",
     "slug": "dpressao",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0F1117"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.gianlukamoraes.dpressao"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0F1117"
       },
+      "package": "com.gianlukamoraes.dpressao",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
