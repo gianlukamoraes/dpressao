@@ -20,6 +20,7 @@ import {
 } from '../utils/bloodPressure';
 import { BPBadge } from '../components/BPBadge';
 import { ReadingCard } from '../components/ReadingCard';
+import { MedicalDisclaimer } from '../components/MedicalDisclaimer';
 import { colors, spacing, borderRadius, fontSize } from '../theme';
 
 export function HomeScreen() {
@@ -183,6 +184,9 @@ export function HomeScreen() {
           ))}
         </View>
       </View>
+
+      {/* Medical Disclaimer Footer */}
+      <MedicalDisclaimer />
     </ScrollView>
   );
 }

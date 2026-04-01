@@ -9,13 +9,14 @@ import {
   Alert,
   StatusBar,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { AppSettings } from '../types';
 import { getSettings, updateSettings, resetSettings } from '../storage/settings';
 import { getReadings, deleteReading } from '../storage/readings';
 import { colors, spacing, borderRadius, fontSize } from '../theme';
 
 export function SettingsScreen() {
+  const navigation = useNavigation<any>();
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [userName, setUserName] = useState('');
   const [readingCount, setReadingCount] = useState(0);
@@ -133,24 +134,31 @@ export function SettingsScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>ℹ️ Sobre</Text>
 
-        <View style={styles.card}>
-          {[
-            { label: 'Versão', value: '1.0.0' },
-            { label: 'Aplicativo', value: 'dPressão' },
-            { label: 'Referência clínica', value: 'AHA / ACC 2017' },
-          ].map((item, idx) => (
-            <View
-              key={item.label}
-              style={[
-                styles.aboutRow,
-                idx > 0 && { borderTopWidth: 1, borderTopColor: colors.border, marginTop: spacing.sm, paddingTop: spacing.sm },
-              ]}
-            >
-              <Text style={styles.aboutLabel}>{item.label}</Text>
-              <Text style={styles.aboutValue}>{item.value}</Text>
-            </View>
-          ))}
-        </View>
+        <TouchableOpacity
+          style={styles.linkButton}
+          onPress={() => navigation.navigate('About')}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.linkButtonIcon}>📱</Text>
+          <View style={styles.linkButtonContent}>
+            <Text style={styles.linkButtonTitle}>Sobre o dPressao</Text>
+            <Text style={styles.linkButtonSubtitle}>Versão 1.0.0 · Créditos e funcionalidades</Text>
+          </View>
+          <Text style={styles.linkButtonArrow}>›</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.linkButton}
+          onPress={() => navigation.navigate('PrivacyPolicy')}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.linkButtonIcon}>🔒</Text>
+          <View style={styles.linkButtonContent}>
+            <Text style={styles.linkButtonTitle}>Política de Privacidade</Text>
+            <Text style={styles.linkButtonSubtitle}>Como seus dados são protegidos</Text>
+          </View>
+          <Text style={styles.linkButtonArrow}>›</Text>
+        </TouchableOpacity>
 
         <View style={styles.disclaimerCard}>
           <Text style={styles.disclaimerText}>
@@ -281,5 +289,36 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.textSecondary,
     lineHeight: 20,
+  },
+  linkButton: {
+    flexDirection: 'row',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    alignItems: 'center',
+    gap: spacing.md,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  linkButtonIcon: {
+    fontSize: fontSize.xl,
+  },
+  linkButtonContent: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  linkButtonTitle: {
+    fontSize: fontSize.sm,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  linkButtonSubtitle: {
+    fontSize: fontSize.xs,
+    color: colors.textMuted,
+  },
+  linkButtonArrow: {
+    fontSize: fontSize.lg,
+    color: colors.textMuted,
   },
 });

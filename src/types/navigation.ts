@@ -4,6 +4,8 @@ export type RootStackParamList = {
   Main: undefined;
   NewReading: { readingId?: string } | undefined;
   ReadingDetail: { reading: BloodPressureReading };
+  PrivacyPolicy: undefined;
+  About: undefined;
 };
 
 export type TabParamList = {
