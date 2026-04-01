@@ -8,6 +8,7 @@ import { HomeScreen } from './src/screens/HomeScreen';
 import { HistoryScreen } from './src/screens/HistoryScreen';
 import { NewReadingScreen } from './src/screens/NewReadingScreen';
 import { ReadingDetailScreen } from './src/screens/ReadingDetailScreen';
+import { TrendScreen } from './src/screens/TrendScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { RootStackParamList, TabParamList } from './src/types/navigation';
 import { colors, fontSize } from './src/theme';
@@ -60,6 +61,14 @@ function HomeTabs() {
         options={{
           title: 'Histórico',
           tabBarIcon: ({ focused }) => <TabIcon emoji="📋" focused={focused} />,
+        }}
+      />
+      <Tab.Screen
+        name="Trends"
+        component={TrendScreen}
+        options={{
+          title: 'Tendências',
+          tabBarIcon: ({ focused }) => <TabIcon emoji="📊" focused={focused} />,
         }}
       />
       <Tab.Screen
