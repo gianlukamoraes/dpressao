@@ -22,3 +22,10 @@ export interface BPClassification {
   emoji: string;
   description: string;
 }
+
+export interface AppSettings {
+  userName: string;
+  reminderEnabled: boolean;
+  reminderTime: string; // HH:00 format
+  disclaimerAcceptedAt: string | null;
+}

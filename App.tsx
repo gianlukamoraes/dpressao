@@ -7,10 +7,13 @@ import { Text, View } from 'react-native';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { HistoryScreen } from './src/screens/HistoryScreen';
 import { NewReadingScreen } from './src/screens/NewReadingScreen';
+import { ReadingDetailScreen } from './src/screens/ReadingDetailScreen';
+import { SettingsScreen } from './src/screens/SettingsScreen';
+import { RootStackParamList, TabParamList } from './src/types/navigation';
 import { colors, fontSize } from './src/theme';
 
-const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator<TabParamList>();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
   return (
@@ -59,6 +62,14 @@ function HomeTabs() {
           tabBarIcon: ({ focused }) => <TabIcon emoji="📋" focused={focused} />,
         }}
       />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          title: 'Ajustes',
+          tabBarIcon: ({ focused }) => <TabIcon emoji="⚙️" focused={focused} />,
+        }}
+      />
     </Tab.Navigator>
   );
 }
@@ -86,6 +97,14 @@ export default function App() {
             title: 'Nova Medição',
             presentation: 'modal',
             headerStyle: { backgroundColor: colors.surface },
+          }}
+        />
+        <Stack.Screen
+          name="ReadingDetail"
+          component={ReadingDetailScreen}
+          options={{
+            title: 'Detalhe da Medição',
+            headerStyle: { backgroundColor: colors.background },
           }}
         />
       </Stack.Navigator>

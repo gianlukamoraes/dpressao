@@ -9,8 +9,9 @@ import {
   StatusBar,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { BloodPressureReading } from '../types';
+import { BloodPressureReading, AppSettings } from '../types';
 import { getReadings } from '../storage/readings';
+import { getSettings } from '../storage/settings';
 import {
   classifyBP,
   formatBP,
@@ -25,10 +26,13 @@ export function HomeScreen() {
   const navigation = useNavigation<any>();
   const [readings, setReadings] = useState<BloodPressureReading[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
 
   const loadReadings = useCallback(async () => {
     const data = await getReadings();
+    const appSettings = await getSettings();
     setReadings(data);
+    setSettings(appSettings);
   }, []);
 
   useFocusEffect(
@@ -66,7 +70,9 @@ export function HomeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Olá, Gianluka 👋</Text>
+          <Text style={styles.greeting}>
+            Olá{settings?.userName ? ', ' + settings.userName : ''} 👋
+          </Text>
           <Text style={styles.subtitle}>Monitoramento de pressão arterial</Text>
         </View>
         <View style={styles.heartIcon}>
@@ -76,11 +82,13 @@ export function HomeScreen() {
 
       {/* Última medição */}
       {latest && latestClassification ? (
-        <View
+        <TouchableOpacity
           style={[
             styles.latestCard,
             { borderColor: latestClassification.color, backgroundColor: latestClassification.bgColor },
           ]}
+          onPress={() => navigation.navigate('ReadingDetail', { reading: latest })}
+          activeOpacity={0.8}
         >
           <Text style={styles.latestLabel}>Última medição</Text>
           <Text style={styles.latestDate}>{formatRelativeDate(latest.date)} · {formatDateTime(latest.date).split(' às ')[1]}</Text>
@@ -116,7 +124,7 @@ export function HomeScreen() {
               {latestClassification.description}
             </Text>
           ) : null}
-        </View>
+        </TouchableOpacity>
       ) : (
         <View style={styles.emptyCard}>
           <Text style={styles.emptyEmoji}>🩺</Text>

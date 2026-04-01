@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,19 +11,45 @@ import {
   Platform,
   StatusBar,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { saveReading } from '../storage/readings';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { saveReading, updateReading, getReadings } from '../storage/readings';
+import { BloodPressureReading } from '../types';
 import { classifyBP } from '../utils/bloodPressure';
 import { BPBadge } from '../components/BPBadge';
 import { colors, spacing, borderRadius, fontSize } from '../theme';
+import { RootStackParamList } from '../types/navigation';
+
+type NewReadingRouteProps = RouteProp<RootStackParamList, 'NewReading'>;
 
 export function NewReadingScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
+  const route = useRoute<NewReadingRouteProps>();
   const [systolic, setSystolic] = useState('');
   const [diastolic, setDiastolic] = useState('');
   const [pulse, setPulse] = useState('');
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (route.params?.readingId) {
+      loadReadingForEdit(route.params.readingId);
+    }
+  }, [route.params?.readingId]);
+
+  async function loadReadingForEdit(id: string) {
+    const readings = await getReadings();
+    const reading = readings.find((r) => r.id === id);
+    if (reading) {
+      setSystolic(reading.systolic.toString());
+      setDiastolic(reading.diastolic.toString());
+      setPulse(reading.pulse.toString());
+      setNote(reading.note || '');
+      setIsEditing(true);
+      setEditingId(id);
+    }
+  }
 
   const isValid =
     systolic.trim() !== '' &&
@@ -63,13 +89,24 @@ export function NewReadingScreen() {
 
     setLoading(true);
     try {
-      await saveReading({
-        systolic: sys,
-        diastolic: dia,
-        pulse: pul,
-        date: new Date().toISOString(),
-        note: note.trim() || undefined,
-      });
+      if (isEditing && editingId) {
+        // Update existing reading
+        await updateReading(editingId, {
+          systolic: sys,
+          diastolic: dia,
+          pulse: pul,
+          note: note.trim() || undefined,
+        });
+      } else {
+        // Create new reading
+        await saveReading({
+          systolic: sys,
+          diastolic: dia,
+          pulse: pul,
+          date: new Date().toISOString(),
+          note: note.trim() || undefined,
+        });
+      }
       navigation.goBack();
     } catch {
       Alert.alert('Erro', 'Não foi possível salvar a medição. Tente novamente.');
@@ -88,7 +125,7 @@ export function NewReadingScreen() {
 
         {/* Cabeçalho */}
         <View style={styles.header}>
-          <Text style={styles.title}>Nova Medição</Text>
+          <Text style={styles.title}>{isEditing ? 'Editar Medição' : 'Nova Medição'}</Text>
           <Text style={styles.subtitle}>
             {new Date().toLocaleDateString('pt-BR', {
               weekday: 'long',

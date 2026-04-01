@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { BloodPressureReading } from '../types';
 import { classifyBP, formatDate, formatTime } from '../utils/bloodPressure';
 import { BPBadge } from './BPBadge';
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function ReadingCard({ reading, onDelete, onPress }: Props) {
+  const navigation = useNavigation<any>();
   const classification = classifyBP(reading.systolic, reading.diastolic);
 
   function handleDelete() {
@@ -42,7 +44,7 @@ export function ReadingCard({ reading, onDelete, onPress }: Props) {
   return (
     <TouchableOpacity
       style={[styles.card, { borderLeftColor: classification.color }]}
-      onPress={onPress}
+      onPress={onPress || (() => navigation.navigate('ReadingDetail', { reading }))}
       onLongPress={handleDelete}
       activeOpacity={0.8}
     >
