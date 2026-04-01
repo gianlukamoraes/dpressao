@@ -22,3 +22,26 @@ export interface BPClassification {
   emoji: string;
   description: string;
 }
+
+export type BiologicalSex = 'male' | 'female' | 'other';
+
+export interface MedicationInfo {
+  uses: boolean;
+  description?: string;
+}
+
+export interface BPGoal {
+  systolic: number;
+  diastolic: number;
+}
+
+export interface UserProfile {
+  name: string;
+  birthDate?: string;
+  biologicalSex?: BiologicalSex;
+  medication: MedicationInfo;
+  bpGoal: BPGoal | null;
+  isDiabetic: boolean;
+  isSmoker: boolean;
+  doctorName?: string;
+}

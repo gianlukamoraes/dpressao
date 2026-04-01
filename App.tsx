@@ -7,6 +7,7 @@ import { Text, View } from 'react-native';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { HistoryScreen } from './src/screens/HistoryScreen';
 import { NewReadingScreen } from './src/screens/NewReadingScreen';
+import { ProfileScreen } from './src/screens/ProfileScreen';
 import { colors, fontSize } from './src/theme';
 
 const Tab = createBottomTabNavigator();
@@ -57,6 +58,14 @@ function HomeTabs() {
         options={{
           title: 'Histórico',
           tabBarIcon: ({ focused }) => <TabIcon emoji="📋" focused={focused} />,
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          title: 'Perfil',
+          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} />,
         }}
       />
     </Tab.Navigator>

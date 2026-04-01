@@ -9,8 +9,9 @@ import {
   StatusBar,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { BloodPressureReading } from '../types';
+import { BloodPressureReading, UserProfile } from '../types';
 import { getReadings } from '../storage/readings';
+import { getProfile } from '../storage/user';
 import {
   classifyBP,
   formatBP,
@@ -21,25 +22,37 @@ import { BPBadge } from '../components/BPBadge';
 import { ReadingCard } from '../components/ReadingCard';
 import { colors, spacing, borderRadius, fontSize } from '../theme';
 
+function calculateAge(iso: string): number | null {
+  const birth = new Date(iso);
+  if (isNaN(birth.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
+}
+
 export function HomeScreen() {
   const navigation = useNavigation<any>();
   const [readings, setReadings] = useState<BloodPressureReading[]>([]);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadReadings = useCallback(async () => {
-    const data = await getReadings();
+  const loadData = useCallback(async () => {
+    const [data, p] = await Promise.all([getReadings(), getProfile()]);
     setReadings(data);
+    setProfile(p);
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      loadReadings();
-    }, [loadReadings])
+      loadData();
+    }, [loadData])
   );
 
   async function handleRefresh() {
     setRefreshing(true);
-    await loadReadings();
+    await loadData();
     setRefreshing(false);
   }
 
@@ -48,6 +61,13 @@ export function HomeScreen() {
     ? classifyBP(latest.systolic, latest.diastolic)
     : null;
   const recentReadings = readings.slice(1, 4);
+
+  const displayName = profile?.name?.trim() || 'Você';
+  const displayAge = profile?.birthDate ? calculateAge(profile.birthDate) : null;
+  const goalExceeded =
+    profile?.bpGoal != null &&
+    latest != null &&
+    (latest.systolic > profile.bpGoal.systolic || latest.diastolic > profile.bpGoal.diastolic);
 
   return (
     <ScrollView
@@ -66,7 +86,10 @@ export function HomeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Olá, Gianluka 👋</Text>
+          <Text style={styles.greeting}>Olá, {displayName} 👋</Text>
+          {displayAge !== null && (
+            <Text style={styles.ageText}>{displayAge} anos</Text>
+          )}
           <Text style={styles.subtitle}>Monitoramento de pressão arterial</Text>
         </View>
         <View style={styles.heartIcon}>
@@ -127,6 +150,16 @@ export function HomeScreen() {
         </View>
       )}
 
+      {/* Banner meta excedida */}
+      {goalExceeded && profile?.bpGoal && (
+        <View style={styles.goalWarning}>
+          <Text style={styles.goalWarningTitle}>⚠️ Meta de pressão excedida</Text>
+          <Text style={styles.goalWarningText}>
+            Sua última medição ({latest!.systolic}/{latest!.diastolic} mmHg) está acima da sua meta ({profile.bpGoal.systolic}/{profile.bpGoal.diastolic} mmHg).
+          </Text>
+        </View>
+      )}
+
       {/* Botão nova medição */}
       <TouchableOpacity
         style={styles.newButton}
@@ -150,7 +183,7 @@ export function HomeScreen() {
             <ReadingCard
               key={reading.id}
               reading={reading}
-              onDelete={loadReadings}
+              onDelete={loadData}
             />
           ))}
         </View>
@@ -199,6 +232,12 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xl,
     fontWeight: '700',
     color: colors.text,
+  },
+  ageText: {
+    fontSize: fontSize.sm,
+    color: colors.primary,
+    fontWeight: '600',
+    marginTop: 1,
   },
   subtitle: {
     fontSize: fontSize.sm,
@@ -361,5 +400,23 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.text,
     fontWeight: '600',
+  },
+  goalWarning: {
+    backgroundColor: colors.elevatedBg,
+    borderWidth: 1,
+    borderColor: colors.elevated,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    gap: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  goalWarningTitle: {
+    fontSize: fontSize.sm,
+    fontWeight: '700',
+    color: colors.elevated,
+  },
+  goalWarningText: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
   },
 });
