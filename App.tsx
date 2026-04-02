@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Text, View } from 'react-native';
+import { Text, View, useColorScheme } from 'react-native';
+import * as Notifications from 'expo-notifications';
 
 import { HomeScreen } from './src/screens/HomeScreen';
 import { HistoryScreen } from './src/screens/HistoryScreen';
@@ -92,7 +93,45 @@ export default function App() {
 
   useEffect(() => {
     checkDisclaimer();
+    setupNotifications();
   }, []);
+
+  const setupNotifications = async () => {
+    // Set notification handler
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+      }),
+    });
+
+    // Reschedule reminders on app load if enabled
+    const settings = await getSettings();
+    if (settings.reminderEnabled) {
+      const { hour } = parseTimeString(settings.reminderTime);
+      Notifications.cancelAllScheduledNotificationsAsync();
+      Notifications.scheduleNotificationAsync({
+        content: {
+          title: '🫀 Hora de Medir sua Pressão!',
+          body: 'Não esqueça de registrar sua medição diária.',
+          sound: 'default',
+          badge: 1,
+        },
+        trigger: {
+          type: 'daily',
+          hour,
+          minute: 0,
+        },
+      });
+    }
+  };
+
+  const parseTimeString = (timeString: string): { hour: number; minute: number } => {
+    const [hourStr] = timeString.split(':');
+    const hour = parseInt(hourStr, 10);
+    return { hour: isNaN(hour) ? 9 : hour, minute: 0 };
+  };
 
   const checkDisclaimer = async () => {
     const settings = await getSettings();

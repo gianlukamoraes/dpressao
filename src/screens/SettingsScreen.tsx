@@ -17,6 +17,13 @@ import { AppSettings } from '../types';
 import { getSettings, updateSettings, resetSettings } from '../storage/settings';
 import { getReadings, deleteReading } from '../storage/readings';
 import { importFromJSON, importFromCSV } from '../utils/exportData';
+import {
+  requestNotificationPermissions,
+  scheduleDailyReminder,
+  cancelAllReminders,
+  parseTimeString,
+  formatTimeString,
+} from '../utils/notifications';
 import { colors, spacing, borderRadius, fontSize } from '../theme';
 
 export function SettingsScreen() {
@@ -25,6 +32,8 @@ export function SettingsScreen() {
   const [userName, setUserName] = useState('');
   const [readingCount, setReadingCount] = useState(0);
   const [importing, setImporting] = useState(false);
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderTime, setReminderTime] = useState('09:00');
 
   useFocusEffect(
     React.useCallback(() => {
@@ -36,6 +45,8 @@ export function SettingsScreen() {
     const loaded = await getSettings();
     setSettings(loaded);
     setUserName(loaded.userName);
+    setReminderEnabled(loaded.reminderEnabled);
+    setReminderTime(loaded.reminderTime);
     const readings = await getReadings();
     setReadingCount(readings.length);
   }
@@ -111,6 +122,68 @@ export function SettingsScreen() {
     }
   }
 
+  async function handleToggleReminder() {
+    try {
+      const newEnabled = !reminderEnabled;
+      setReminderEnabled(newEnabled);
+
+      if (newEnabled) {
+        // Request permissions and schedule reminder
+        const hasPermission = await requestNotificationPermissions();
+        if (!hasPermission) {
+          Alert.alert(
+            'Permissão Negada',
+            'Para usar lembretes, você precisa ativar notificações nas configurações do dispositivo.'
+          );
+          setReminderEnabled(false);
+          return;
+        }
+
+        // Schedule the reminder
+        const { hour } = parseTimeString(reminderTime);
+        await scheduleDailyReminder(hour);
+      } else {
+        // Cancel reminders
+        await cancelAllReminders();
+      }
+
+      // Update settings
+      if (settings) {
+        await updateSettings({
+          ...settings,
+          reminderEnabled: newEnabled,
+          reminderTime,
+        });
+      }
+    } catch (error) {
+      Alert.alert('Erro', 'Falha ao configurar lembrete.');
+      setReminderEnabled(!reminderEnabled);
+    }
+  }
+
+  async function handleChangeReminderTime(time: string) {
+    try {
+      setReminderTime(time);
+
+      // If reminder is enabled, reschedule with new time
+      if (reminderEnabled) {
+        const { hour } = parseTimeString(time);
+        await scheduleDailyReminder(hour);
+      }
+
+      // Update settings
+      if (settings) {
+        await updateSettings({
+          ...settings,
+          reminderEnabled,
+          reminderTime: time,
+        });
+      }
+    } catch (error) {
+      Alert.alert('Erro', 'Falha ao mudar horário do lembrete.');
+    }
+  }
+
   if (!settings) {
     return (
       <View style={styles.container}>
@@ -149,6 +222,69 @@ export function SettingsScreen() {
           >
             <Text style={styles.buttonText}>Salvar Nome</Text>
           </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Seção Lembretes */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>🔔 Lembretes</Text>
+
+        <View style={styles.card}>
+          <View style={styles.reminderToggleRow}>
+            <View style={styles.reminderToggleLeft}>
+              <Text style={styles.label}>Ativar Lembrete Diário</Text>
+              <Text style={styles.reminderToggleSubtitle}>
+                Receba uma notificação para medir sua pressão
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={[
+                styles.toggleSwitch,
+                reminderEnabled && styles.toggleSwitchActive,
+              ]}
+              onPress={handleToggleReminder}
+              activeOpacity={0.7}
+            >
+              <View
+                style={[
+                  styles.toggleCircle,
+                  reminderEnabled && styles.toggleCircleActive,
+                ]}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {reminderEnabled && (
+            <>
+              <View style={styles.divider} />
+              <View style={styles.reminderTimeRow}>
+                <Text style={styles.label}>Horário</Text>
+                <View style={styles.timeInputContainer}>
+                  {[9, 12, 15, 18, 21].map((hour) => (
+                    <TouchableOpacity
+                      key={hour}
+                      style={[
+                        styles.timeChip,
+                        reminderTime === formatTimeString(hour) &&
+                          styles.timeChipActive,
+                      ]}
+                      onPress={() => handleChangeReminderTime(formatTimeString(hour))}
+                    >
+                      <Text
+                        style={[
+                          styles.timeChipText,
+                          reminderTime === formatTimeString(hour) &&
+                            styles.timeChipTextActive,
+                        ]}
+                      >
+                        {formatTimeString(hour)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </>
+          )}
         </View>
       </View>
 
@@ -388,5 +524,72 @@ const styles = StyleSheet.create({
   linkButtonArrow: {
     fontSize: fontSize.lg,
     color: colors.textMuted,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: spacing.md,
+  },
+  reminderToggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  reminderToggleLeft: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  reminderToggleSubtitle: {
+    fontSize: fontSize.xs,
+    color: colors.textMuted,
+  },
+  toggleSwitch: {
+    width: 50,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.border,
+    padding: 2,
+    justifyContent: 'center',
+  },
+  toggleSwitchActive: {
+    backgroundColor: colors.primary,
+  },
+  toggleCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.textMuted,
+  },
+  toggleCircleActive: {
+    backgroundColor: colors.text,
+    alignSelf: 'flex-end',
+  },
+  reminderTimeRow: {
+    gap: spacing.md,
+  },
+  timeInputContainer: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    flexWrap: 'wrap',
+  },
+  timeChip: {
+    backgroundColor: colors.surfaceLight,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  timeChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  timeChipText: {
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  timeChipTextActive: {
+    color: colors.text,
   },
 });
