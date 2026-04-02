@@ -1,26 +1,43 @@
-export const colors = {
-  primary: '#E53935',       // Vermelho médico
-  primaryLight: '#FF6B6B',
-  primaryDark: '#B71C1C',
-  background: '#0F1117',    // Fundo escuro
-  surface: '#1A1D27',       // Cards
-  surfaceLight: '#252836',  // Cards mais claros
-  border: '#2E3347',
-  text: '#FFFFFF',
-  textSecondary: '#9EA3B0',
-  textMuted: '#5C6070',
+// HONEST DATA: Brutalist Medical + Warmth
+// Tipografia: Serif bold (títulos) + Monospace (dados) + Sans moderno (corpo)
+// Cores: Medical palette + Gold accent + Black contrast
+// Composição: Bold numbers, asymmetric layout, generous whitespace
 
-  // Status da pressão
-  normal: '#4CAF50',
-  normalBg: '#1B2E1C',
-  elevated: '#FFC107',
-  elevatedBg: '#2E2710',
-  hypertension1: '#FF9800',
-  hypertension1Bg: '#2E1F0A',
-  hypertension2: '#F44336',
-  hypertension2Bg: '#2E100E',
-  crisis: '#9C27B0',
-  crisisBg: '#1E1228',
+export const colors = {
+  // Primary medical red (warmth)
+  primary: '#DC3545',       // Mais warm que antes
+  primaryLight: '#E07080',
+  primaryDark: '#A02838',
+
+  // Backgrounds & Surfaces
+  background: '#FAFAF8',    // Off-white (não branco puro)
+  surface: '#FFFFFF',       // Pure white para cards
+  surfaceLight: '#F5F5F3',  // Subtle gray
+  border: '#000000',        // Black solid borders (brutalist)
+
+  // Text hierarchy
+  text: '#1A1A1A',          // Near-black (não pure white)
+  textSecondary: '#5A5A5A', // Medium gray
+  textMuted: '#888888',     // Light gray
+
+  // Accent: Warm gold
+  accent: '#C9A961',        // Gold para highlights
+  accentLight: '#E8D4B8',
+
+  // Status colors (medical palette - kept vibrant)
+  normal: '#22C55E',        // Bright green
+  normalBg: '#F0FDF4',
+  elevated: '#FBBF24',      // Amber
+  elevatedBg: '#FFFBEB',
+  hypertension1: '#FB923C', // Orange
+  hypertension1Bg: '#FEF3C7',
+  hypertension2: '#EF4444', // Red
+  hypertension2Bg: '#FEE2E2',
+  crisis: '#A855F7',        // Purple
+  crisisBg: '#F3E8FF',
+
+  // Utility
+  overlay: 'rgba(0,0,0,0.5)',
 };
 
 export const spacing = {
@@ -30,22 +47,25 @@ export const spacing = {
   lg: 24,
   xl: 32,
   xxl: 48,
+  huge: 64,
 };
 
 export const borderRadius = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
+  sm: 2,      // More square/brutalist
+  md: 4,
+  lg: 8,
+  xl: 12,
   full: 999,
 };
 
 export const fontSize = {
   xs: 11,
-  sm: 13,
-  md: 15,
-  lg: 17,
-  xl: 20,
-  xxl: 28,
-  giant: 48,
+  sm: 12,
+  md: 14,
+  lg: 16,
+  xl: 18,
+  xl2: 24,
+  xxl: 32,    // Headlines
+  xxxl: 48,   // Big numbers
+  giant: 64,  // Huge numbers for BP
 };

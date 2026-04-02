@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { BPClassification } from '../types';
-import { borderRadius, fontSize, spacing } from '../theme';
+import { borderRadius, fontSize, spacing, colors } from '../theme';
 
 interface Props {
   classification: BPClassification;
@@ -16,24 +16,35 @@ export function BPBadge({ classification, size = 'md' }: Props) {
     <View
       style={[
         styles.badge,
-        { backgroundColor: classification.bgColor, borderColor: classification.color },
+        {
+          backgroundColor: classification.bgColor,
+          borderColor: classification.color,
+        },
         isSmall && styles.badgeSm,
         isLarge && styles.badgeLg,
       ]}
     >
-      <Text style={[styles.emoji, isSmall && styles.emojiSm, isLarge && styles.emojiLg]}>
-        {classification.emoji}
-      </Text>
       <Text
         style={[
-          styles.label,
-          { color: classification.color },
-          isSmall && styles.labelSm,
-          isLarge && styles.labelLg,
+          styles.emoji,
+          isSmall && styles.emojiSm,
+          isLarge && styles.emojiLg,
         ]}
       >
-        {classification.label}
+        {classification.emoji}
       </Text>
+      <View style={styles.labelContainer}>
+        <Text
+          style={[
+            styles.label,
+            { color: classification.color },
+            isSmall && styles.labelSm,
+            isLarge && styles.labelLg,
+          ]}
+        >
+          {classification.label}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -44,34 +55,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-    gap: spacing.xs,
+    borderRadius: borderRadius.lg,
+    borderWidth: 2,
+    gap: spacing.sm,
     alignSelf: 'flex-start',
   },
   badgeSm: {
     paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
+    paddingVertical: 4,
+    borderWidth: 1.5,
   },
   badgeLg: {
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm + 2,
+    paddingVertical: spacing.md,
+    borderWidth: 2.5,
+  },
+  labelContainer: {
+    justifyContent: 'center',
   },
   emoji: {
-    fontSize: fontSize.md,
+    fontSize: fontSize.lg,
   },
   emojiSm: {
-    fontSize: fontSize.sm,
+    fontSize: fontSize.md,
   },
   emojiLg: {
-    fontSize: fontSize.xl,
+    fontSize: fontSize.xl2,
   },
   label: {
-    fontWeight: '600',
+    fontWeight: '700',
     fontSize: fontSize.md,
   },
   labelSm: {
-    fontSize: fontSize.xs,
+    fontSize: fontSize.sm,
   },
   labelLg: {
     fontSize: fontSize.lg,
