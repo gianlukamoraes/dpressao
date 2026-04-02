@@ -69,3 +69,41 @@ export const fontSize = {
   xxxl: 48,   // Big numbers
   giant: 64,  // Huge numbers for BP
 };
+
+// DARK MODE THEME (inverted aesthetic, same principles)
+export const colorsDark = {
+  // Primary medical red (keep warm)
+  primary: '#DC3545',
+  primaryLight: '#E07080',
+  primaryDark: '#A02838',
+
+  // Dark backgrounds & Surfaces
+  background: '#0F0F0D',    // Near-black
+  surface: '#1A1A18',       // Very dark gray
+  surfaceLight: '#2A2A28',  // Slightly lighter
+  border: '#FFFFFF',        // WHITE borders (inverted from black)
+
+  // Text hierarchy (inverted)
+  text: '#FAFAF8',          // Off-white
+  textSecondary: '#A5A5A5', // Medium gray
+  textMuted: '#777777',     // Light gray
+
+  // Accent: Keep gold
+  accent: '#C9A961',        // Gold still works
+  accentLight: '#E8D4B8',
+
+  // Status colors (keep vibrant)
+  normal: '#22C55E',        // Bright green
+  normalBg: '#0F2912',
+  elevated: '#FBBF24',      // Amber
+  elevatedBg: '#1F1A05',
+  hypertension1: '#FB923C', // Orange
+  hypertension1Bg: '#1F1305',
+  hypertension2: '#EF4444', // Red
+  hypertension2Bg: '#2D0B0B',
+  crisis: '#A855F7',        // Purple
+  crisisBg: '#2D1F47',
+
+  // Utility
+  overlay: 'rgba(255,255,255,0.5)',
+};
