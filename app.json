@@ -18,6 +18,7 @@
       "bundleIdentifier": "com.gianlukamoraes.dpressao",
       "buildNumber": "1",
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "NSHealthShareUsageDescription": "Nós usamos dados de pressão arterial apenas para ajudá-lo a monitorar sua saúde.",
         "NSHealthUpdateUsageDescription": "Nós salvamos seus dados de pressão arterial no seu dispositivo.",
         "NSNotificationUsageDescription": "Nós enviamos um lembrete diário para você medir sua pressão arterial (opcional).",
@@ -50,6 +51,11 @@
           "defaultChannel": "default"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "c441c19e-0119-4d1f-9c9e-d09b03885e78"
+      }
+    }
   }
 }

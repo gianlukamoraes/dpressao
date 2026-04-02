@@ -10,7 +10,7 @@
     "preview": {
       "distribution": "internal",
       "ios": {
-        "resourceClass": "m-1"
+        "resourceClass": "m-medium"
       },
       "android": {
         "resourceClass": "medium"
@@ -18,7 +18,7 @@
     },
     "production": {
       "ios": {
-        "resourceClass": "m-1"
+        "resourceClass": "m-medium"
       },
       "android": {
         "resourceClass": "medium"
