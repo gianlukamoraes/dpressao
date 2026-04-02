@@ -8,11 +8,15 @@ import {
   TouchableOpacity,
   Alert,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 import { AppSettings } from '../types';
 import { getSettings, updateSettings, resetSettings } from '../storage/settings';
 import { getReadings, deleteReading } from '../storage/readings';
+import { importFromJSON, importFromCSV } from '../utils/exportData';
 import { colors, spacing, borderRadius, fontSize } from '../theme';
 
 export function SettingsScreen() {
@@ -20,6 +24,7 @@ export function SettingsScreen() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [userName, setUserName] = useState('');
   const [readingCount, setReadingCount] = useState(0);
+  const [importing, setImporting] = useState(false);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -61,6 +66,49 @@ export function SettingsScreen() {
         },
       ]
     );
+  }
+
+  async function handleImportData() {
+    try {
+      setImporting(true);
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/json', 'text/csv'],
+      });
+
+      if (result.canceled) {
+        return;
+      }
+
+      const fileUri = result.assets[0].uri;
+      const fileName = result.assets[0].name || '';
+      const fileContent = await FileSystem.readAsStringAsync(fileUri);
+
+      let importedCount = 0;
+
+      if (fileName.endsWith('.json')) {
+        importedCount = await importFromJSON(fileContent);
+      } else if (fileName.endsWith('.csv')) {
+        importedCount = await importFromCSV(fileContent);
+      } else {
+        Alert.alert('Erro', 'Formato de arquivo não suportado. Use JSON ou CSV.');
+        return;
+      }
+
+      await loadSettings();
+
+      Alert.alert(
+        'Importação Concluída',
+        `${importedCount} novo(s) registro(s) importado(s) com sucesso!`,
+        [{ text: 'OK' }]
+      );
+    } catch (error) {
+      Alert.alert(
+        'Erro ao importar',
+        error instanceof Error ? error.message : 'Falha desconhecida'
+      );
+    } finally {
+      setImporting(false);
+    }
   }
 
   if (!settings) {
@@ -121,13 +169,27 @@ export function SettingsScreen() {
           </View>
         </View>
 
-        <TouchableOpacity
-          style={[styles.button, styles.dangerButton]}
-          onPress={handleClearData}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.dangerButtonText}>🗑️ Limpar todos os dados</Text>
-        </TouchableOpacity>
+        <View style={styles.buttonGroup}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleImportData}
+            disabled={importing}
+            activeOpacity={0.7}
+          >
+            {importing ? (
+              <ActivityIndicator size="small" color={colors.text} />
+            ) : (
+              <Text style={styles.buttonText}>📥 Importar Dados</Text>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.dangerButton]}
+            onPress={handleClearData}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.dangerButtonText}>🗑️ Limpar Tudo</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Seção Sobre */}
@@ -235,14 +297,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     alignItems: 'center',
+    flex: 1,
   },
   buttonText: {
     color: colors.text,
     fontWeight: '700',
     fontSize: fontSize.md,
   },
+  buttonGroup: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
   dangerButton: {
     backgroundColor: colors.hypertension2,
+    flex: 1,
   },
   dangerButtonText: {
     color: colors.text,

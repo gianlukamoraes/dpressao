@@ -6,12 +6,20 @@ import {
   FlatList,
   TouchableOpacity,
   StatusBar,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
 import { BloodPressureReading } from '../types';
 import { getReadings } from '../storage/readings';
+import { getSettings } from '../storage/settings';
 import { classifyBP, formatDate } from '../utils/bloodPressure';
 import { ReadingCard } from '../components/ReadingCard';
+import { generatePDFReport } from '../utils/pdfReport';
+import { exportAsCSV, exportAsJSON } from '../utils/exportData';
 import { colors, spacing, borderRadius, fontSize } from '../theme';
 
 type Filter = 'all' | 'normal' | 'elevated' | 'hypertension1' | 'hypertension2' | 'crisis';
@@ -29,6 +37,7 @@ export function HistoryScreen() {
   const navigation = useNavigation<any>();
   const [readings, setReadings] = useState<BloodPressureReading[]>([]);
   const [filter, setFilter] = useState<Filter>('all');
+  const [exporting, setExporting] = useState(false);
 
   const loadReadings = useCallback(async () => {
     const data = await getReadings();
@@ -40,6 +49,94 @@ export function HistoryScreen() {
       loadReadings();
     }, [loadReadings])
   );
+
+  const handleExportPDF = async () => {
+    try {
+      setExporting(true);
+      if (readings.length === 0) {
+        Alert.alert('Sem dados', 'Nenhuma medição para exportar.');
+        return;
+      }
+
+      const settings = await getSettings();
+      const html = generatePDFReport(readings, { userName: settings.userName });
+      const { uri } = await Print.printToFileAsync({ html });
+
+      // Copy to documents directory for sharing
+      const fileName = `dPressao_${new Date().getTime()}.pdf`;
+      const docPath = `${FileSystem.documentDirectory}${fileName}`;
+      await FileSystem.copyAsync({ from: uri, to: docPath });
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(docPath, {
+          mimeType: 'application/pdf',
+          dialogTitle: 'Compartilhar Relatório PDF',
+        });
+      } else {
+        Alert.alert('Sucesso', 'PDF gerado com sucesso!');
+      }
+    } catch (error) {
+      Alert.alert('Erro', `Falha ao exportar PDF: ${error instanceof Error ? error.message : 'Desconhecido'}`);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportCSV = async () => {
+    try {
+      setExporting(true);
+      if (readings.length === 0) {
+        Alert.alert('Sem dados', 'Nenhuma medição para exportar.');
+        return;
+      }
+
+      const csv = exportAsCSV(readings);
+      const fileName = `dPressao_${new Date().getTime()}.csv`;
+      const filePath = `${FileSystem.documentDirectory}${fileName}`;
+      await FileSystem.writeAsStringAsync(filePath, csv);
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(filePath, {
+          mimeType: 'text/csv',
+          dialogTitle: 'Compartilhar CSV',
+        });
+      } else {
+        Alert.alert('Sucesso', 'CSV gerado com sucesso!');
+      }
+    } catch (error) {
+      Alert.alert('Erro', `Falha ao exportar CSV: ${error instanceof Error ? error.message : 'Desconhecido'}`);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportJSON = async () => {
+    try {
+      setExporting(true);
+      if (readings.length === 0) {
+        Alert.alert('Sem dados', 'Nenhuma medição para exportar.');
+        return;
+      }
+
+      const json = exportAsJSON(readings);
+      const fileName = `dPressao_backup_${new Date().getTime()}.json`;
+      const filePath = `${FileSystem.documentDirectory}${fileName}`;
+      await FileSystem.writeAsStringAsync(filePath, json);
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(filePath, {
+          mimeType: 'application/json',
+          dialogTitle: 'Compartilhar Backup JSON',
+        });
+      } else {
+        Alert.alert('Sucesso', 'JSON salvo com sucesso!');
+      }
+    } catch (error) {
+      Alert.alert('Erro', `Falha ao exportar JSON: ${error instanceof Error ? error.message : 'Desconhecido'}`);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const filteredReadings = readings.filter((r) => {
     if (filter === 'all') return true;
@@ -103,6 +200,57 @@ export function HistoryScreen() {
                     <Text style={styles.summaryValue}>{readings.length}</Text>
                     <Text style={styles.summaryLabel}>medições</Text>
                   </View>
+                </View>
+              </View>
+            )}
+
+            {/* Botões de Exportação */}
+            {readings.length > 0 && (
+              <View style={styles.exportSection}>
+                <Text style={styles.exportTitle}>📥 Exportar Dados</Text>
+                <View style={styles.exportButtons}>
+                  <TouchableOpacity
+                    style={styles.exportButton}
+                    onPress={handleExportPDF}
+                    disabled={exporting}
+                  >
+                    {exporting ? (
+                      <ActivityIndicator size="small" color={colors.text} />
+                    ) : (
+                      <>
+                        <Text style={styles.exportButtonIcon}>📄</Text>
+                        <Text style={styles.exportButtonLabel}>PDF</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.exportButton}
+                    onPress={handleExportCSV}
+                    disabled={exporting}
+                  >
+                    {exporting ? (
+                      <ActivityIndicator size="small" color={colors.text} />
+                    ) : (
+                      <>
+                        <Text style={styles.exportButtonIcon}>📊</Text>
+                        <Text style={styles.exportButtonLabel}>CSV</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.exportButton}
+                    onPress={handleExportJSON}
+                    disabled={exporting}
+                  >
+                    {exporting ? (
+                      <ActivityIndicator size="small" color={colors.text} />
+                    ) : (
+                      <>
+                        <Text style={styles.exportButtonIcon}>💾</Text>
+                        <Text style={styles.exportButtonLabel}>Backup</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
                 </View>
               </View>
             )}
@@ -294,5 +442,39 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: '700',
     fontSize: fontSize.md,
+  },
+  exportSection: {
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  exportTitle: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  exportButtons: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  exportButton: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  exportButtonIcon: {
+    fontSize: fontSize.lg,
+  },
+  exportButtonLabel: {
+    fontSize: fontSize.xs,
+    fontWeight: '600',
+    color: colors.text,
   },
 });
