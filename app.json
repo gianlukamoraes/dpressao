@@ -3,6 +3,8 @@
     "name": "dPressão",
     "slug": "dpressao",
     "version": "1.0.0",
+    "description": "Monitore sua pressão arterial de forma simples e segura, com privacidade total.",
+    "owner": "gianlukamoraes",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -13,7 +15,15 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.gianlukamoraes.dpressao"
+      "bundleIdentifier": "com.gianlukamoraes.dpressao",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSHealthShareUsageDescription": "Nós usamos dados de pressão arterial apenas para ajudá-lo a monitorar sua saúde.",
+        "NSHealthUpdateUsageDescription": "Nós salvamos seus dados de pressão arterial no seu dispositivo.",
+        "NSNotificationUsageDescription": "Nós enviamos um lembrete diário para você medir sua pressão arterial (opcional).",
+        "NSLocalNetworkUsageDescription": "O app não usa rede local.",
+        "NSBonjourServiceTypes": []
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,11 +31,25 @@
         "backgroundColor": "#0F1117"
       },
       "package": "com.gianlukamoraes.dpressao",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS"
+      ],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#0066CC",
+          "defaultChannel": "default"
+        }
+      ]
+    ]
   }
 }

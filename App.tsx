@@ -17,6 +17,7 @@ import { AboutScreen } from './src/screens/AboutScreen';
 import { RootStackParamList, TabParamList } from './src/types/navigation';
 import { colors, fontSize } from './src/theme';
 import { getSettings, updateSettings } from './src/storage/settings';
+import { ErrorBoundary } from './src/components/ErrorBoundary';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -88,7 +89,7 @@ function HomeTabs() {
   );
 }
 
-export default function App() {
+function AppContent() {
   const [disclaimerAccepted, setDisclaimerAccepted] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -224,5 +225,13 @@ export default function App() {
         />
       </Stack.Navigator>
     </NavigationContainer>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppContent />
+    </ErrorBoundary>
   );
 }
