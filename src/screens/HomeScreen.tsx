@@ -14,7 +14,6 @@ import { getReadings } from '../storage/readings';
 import { getSettings } from '../storage/settings';
 import {
   classifyBP,
-  formatBP,
   formatDateTime,
   formatRelativeDate,
 } from '../utils/bloodPressure';
@@ -22,6 +21,14 @@ import { BPBadge } from '../components/BPBadge';
 import { ReadingCard } from '../components/ReadingCard';
 import { MedicalDisclaimer } from '../components/MedicalDisclaimer';
 import { colors, spacing, borderRadius, fontSize } from '../theme';
+
+const REFERENCE_ITEMS = [
+  { label: 'Normal', value: '< 130/< 85', color: colors.normal },
+  { label: 'Elevada', value: '130–139/85–89', color: colors.elevated },
+  { label: 'Hipertensão 1', value: '140–159/90–99', color: colors.hypertension1 },
+  { label: 'Hipertensão 2', value: '160–179/100–109', color: colors.hypertension2 },
+  { label: 'Crise', value: '≥ 180/≥ 110', color: colors.crisis },
+];
 
 export function HomeScreen() {
   const navigation = useNavigation<any>();
@@ -86,45 +93,52 @@ export function HomeScreen() {
         <TouchableOpacity
           style={[
             styles.latestCard,
-            { borderColor: latestClassification.color, backgroundColor: latestClassification.bgColor },
+            {
+              borderColor: latestClassification.color,
+              backgroundColor: latestClassification.bgColor,
+            },
           ]}
           onPress={() => navigation.navigate('ReadingDetail', { reading: latest })}
           activeOpacity={0.8}
         >
-          <Text style={styles.latestLabel}>Última medição</Text>
-          <Text style={styles.latestDate}>{formatRelativeDate(latest.date)} · {formatDateTime(latest.date).split(' às ')[1]}</Text>
+          <View style={styles.latestCardContent}>
+            {/* Header row */}
+            <View style={styles.latestHeader}>
+              <Text style={styles.latestLabel}>ÚLTIMA MEDIÇÃO</Text>
+              <Text style={styles.latestDate}>
+                {formatRelativeDate(latest.date)} · {formatDateTime(latest.date).split(' às ')[1]}
+              </Text>
+            </View>
 
-          <View style={styles.latestBP}>
-            <Text style={[styles.latestValue, { color: latestClassification.color }]}>
-              {formatBP(latest.systolic, latest.diastolic)}
-            </Text>
-            <Text style={styles.latestUnit}>mmHg</Text>
+            {/* Main BP value */}
+            <View style={styles.latestBP}>
+              <Text
+                style={[styles.latestValue, { color: latestClassification.color }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.5}
+              >
+                {latest.systolic}/{latest.diastolic}
+              </Text>
+              <Text style={styles.latestUnit}>mmHg</Text>
+            </View>
+
+            {/* Status badge */}
+            <BPBadge classification={latestClassification} size="md" />
+
+            {/* Só pulso — sem repetir SIS/DIA */}
+            <View style={styles.pulseRow}>
+              <Text style={styles.pulseIcon}>💓</Text>
+              <Text style={styles.pulseValue}>{latest.pulse}</Text>
+              <Text style={styles.pulseUnit}>bpm</Text>
+            </View>
+
+            {latestClassification.description ? (
+              <Text style={[styles.description, { color: latestClassification.color }]}>
+                {latestClassification.description}
+              </Text>
+            ) : null}
           </View>
-
-          <View style={styles.latestStats}>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Sistólica</Text>
-              <Text style={styles.statValue}>{latest.systolic}</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Diastólica</Text>
-              <Text style={styles.statValue}>{latest.diastolic}</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Pulso</Text>
-              <Text style={styles.statValue}>{latest.pulse}</Text>
-            </View>
-          </View>
-
-          <BPBadge classification={latestClassification} size="lg" />
-
-          {latestClassification.description ? (
-            <Text style={[styles.description, { color: latestClassification.color }]}>
-              {latestClassification.description}
-            </Text>
-          ) : null}
         </TouchableOpacity>
       ) : (
         <View style={styles.emptyCard}>
@@ -169,17 +183,17 @@ export function HomeScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Tabela de Referência</Text>
         <View style={styles.referenceCard}>
-          {[
-            { emoji: '🟢', label: 'Normal', value: '< 120/80' },
-            { emoji: '🟡', label: 'Elevada', value: '120–129/< 80' },
-            { emoji: '🟠', label: 'Hipertensão 1', value: '130–139/80–89' },
-            { emoji: '🔴', label: 'Hipertensão 2', value: '≥ 140/≥ 90' },
-            { emoji: '🚨', label: 'Crise', value: '> 180/> 120' },
-          ].map((item, i) => (
-            <View key={i} style={styles.referenceRow}>
-              <Text style={styles.referenceEmoji}>{item.emoji}</Text>
+          {REFERENCE_ITEMS.map((item, i) => (
+            <View
+              key={i}
+              style={[
+                styles.referenceRow,
+                i < REFERENCE_ITEMS.length - 1 && styles.referenceRowBorder,
+              ]}
+            >
+              <View style={[styles.referenceDot, { backgroundColor: item.color }]} />
               <Text style={styles.referenceLabel}>{item.label}</Text>
-              <Text style={styles.referenceValue}>{item.value}</Text>
+              <Text style={[styles.referenceValue, { color: item.color }]}>{item.value}</Text>
             </View>
           ))}
         </View>
@@ -205,7 +219,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.sm,
     marginTop: spacing.sm,
   },
   greeting: {
@@ -221,8 +235,8 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   heartIcon: {
-    width: 56,
-    height: 56,
+    width: 52,
+    height: 52,
     borderRadius: borderRadius.lg,
     backgroundColor: colors.surface,
     borderWidth: 2,
@@ -230,81 +244,91 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
+  // ── Latest card ────────────────────────────────────────────────
   latestCard: {
     borderRadius: borderRadius.md,
-    padding: spacing.lg,
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  latestCardContent: {
+    padding: spacing.lg,
     gap: spacing.md,
+  },
+  latestHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   latestLabel: {
     fontSize: fontSize.xs,
     color: colors.textMuted,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 1.5,
+    fontWeight: '800',
+    letterSpacing: 1.2,
   },
   latestDate: {
-    fontSize: fontSize.sm,
+    fontSize: fontSize.xs,
     color: colors.textSecondary,
     fontWeight: '500',
   },
   latestBP: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   latestValue: {
-    fontSize: fontSize.giant,
+    fontSize: 56,
     fontWeight: '900',
-    lineHeight: 72,
     color: colors.text,
+    flex: 1,
   },
   latestUnit: {
     fontSize: fontSize.sm,
     color: colors.textMuted,
-    marginBottom: spacing.xs,
+    marginBottom: 8,
     fontWeight: '600',
   },
-  latestStats: {
+
+  // ── Pulse row ──────────────────────────────────────────────────
+  pulseRow: {
     flexDirection: 'row',
-    backgroundColor: colors.surfaceLight,
-    borderRadius: borderRadius.md,
-    borderWidth: 2,
-    borderColor: colors.border,
-    padding: spacing.lg,
-    gap: spacing.lg,
-  },
-  statItem: {
-    flex: 1,
     alignItems: 'center',
-    gap: 2,
+    justifyContent: 'center',
+    gap: spacing.sm,
+    backgroundColor: 'rgba(255,255,255,0.6)',
+    borderRadius: borderRadius.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.08)',
+    paddingVertical: spacing.sm,
   },
-  statLabel: {
-    fontSize: fontSize.xs,
-    color: colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    fontWeight: '700',
+  pulseIcon: {
+    fontSize: fontSize.lg,
   },
-  statValue: {
-    fontSize: fontSize.xxl,
+  pulseValue: {
+    fontSize: fontSize.xl2,
     fontWeight: '900',
     color: colors.text,
   },
-  statDivider: {
-    width: 1,
-    backgroundColor: colors.border,
+  pulseUnit: {
+    fontSize: fontSize.sm,
+    color: colors.textMuted,
+    fontWeight: '600',
   },
   description: {
     fontSize: fontSize.sm,
     fontWeight: '500',
-    marginTop: spacing.xs,
   },
+
+  // ── Empty state ────────────────────────────────────────────────
   emptyCard: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: colors.border,
     padding: spacing.xl,
     alignItems: 'center',
@@ -323,27 +347,36 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
   },
+
+  // ── Nova Medição button ────────────────────────────────────────
   newButton: {
     backgroundColor: colors.primary,
     borderRadius: borderRadius.md,
-    borderWidth: 2,
-    borderColor: colors.border,
-    padding: spacing.lg,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.md,
+    gap: spacing.sm,
+    shadowColor: '#16A34A',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 3,
   },
   newButtonIcon: {
-    fontSize: fontSize.xl2,
+    fontSize: fontSize.xl,
   },
   newButtonText: {
     fontSize: fontSize.lg,
-    fontWeight: '800',
+    fontWeight: '900',
     color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
+
+  // ── Sections ───────────────────────────────────────────────────
   section: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.sm,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -356,29 +389,43 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: colors.text,
     letterSpacing: -0.5,
+    marginBottom: spacing.sm,
   },
   seeAll: {
     fontSize: fontSize.sm,
     color: colors.primary,
-    fontWeight: '600',
+    fontWeight: '700',
   },
+
+  // ── Reference table ────────────────────────────────────────────
   referenceCard: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: colors.border,
-    padding: spacing.lg,
-    gap: spacing.md,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
   },
   referenceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.lg,
+    gap: spacing.md,
   },
-  referenceEmoji: {
-    fontSize: fontSize.md,
-    width: 22,
-    textAlign: 'center',
+  referenceRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surfaceLight,
+  },
+  referenceDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    flexShrink: 0,
   },
   referenceLabel: {
     flex: 1,
@@ -387,8 +434,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   referenceValue: {
-    fontSize: fontSize.md,
-    color: colors.text,
+    fontSize: fontSize.sm,
     fontWeight: '800',
   },
 });
