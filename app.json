@@ -22,6 +22,8 @@
         "NSHealthShareUsageDescription": "Nós usamos dados de pressão arterial apenas para ajudá-lo a monitorar sua saúde.",
         "NSHealthUpdateUsageDescription": "Nós salvamos seus dados de pressão arterial no seu dispositivo.",
         "NSNotificationUsageDescription": "Nós enviamos um lembrete diário para você medir sua pressão arterial (opcional).",
+        "NSPhotoLibraryUsageDescription": "Precisamos acessar sua galeria para anexar fotos de resultados de exames ao seu prontuário.",
+        "NSPhotoLibraryAddUsageDescription": "Precisamos salvar fotos de exames no seu dispositivo.",
         "NSLocalNetworkUsageDescription": "O app não usa rede local.",
         "NSBonjourServiceTypes": []
       }
@@ -49,6 +51,12 @@
           "icon": "./assets/icon.png",
           "color": "#0066CC",
           "defaultChannel": "default"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Precisamos acessar sua galeria para anexar fotos de resultados de exames ao seu prontuário."
         }
       ]
     ],

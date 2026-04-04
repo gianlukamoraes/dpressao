@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -27,6 +28,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function HomeTabs() {
   const { colors, isLiquidGlass } = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -36,8 +38,8 @@ function HomeTabs() {
           backgroundColor: isLiquidGlass ? 'rgba(28,10,10,0.95)' : colors.surface,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: 64,
-          paddingBottom: 8,
+          height: 56 + insets.bottom,
+          paddingBottom: insets.bottom + 4,
           paddingTop: 6,
         },
         tabBarLabelStyle: {

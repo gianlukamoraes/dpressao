@@ -9,9 +9,9 @@ import {
   StatusBar,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { BloodPressureReading, AppSettings } from '../types';
+import { BloodPressureReading, UserProfile } from '../types';
 import { getReadings } from '../storage/readings';
-import { getSettings } from '../storage/settings';
+import { getProfile } from '../storage/user';
 import {
   classifyBP,
   formatDateTime,
@@ -29,7 +29,7 @@ export function HomeScreen() {
   const { colors, isLiquidGlass } = useTheme();
   const [readings, setReadings] = useState<BloodPressureReading[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [settings, setSettings] = useState<AppSettings | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
 
   const REFERENCE_ITEMS = [
     { label: 'Normal', value: '< 130/< 85', color: colors.normal },
@@ -40,10 +40,9 @@ export function HomeScreen() {
   ];
 
   const loadReadings = useCallback(async () => {
-    const data = await getReadings();
-    const appSettings = await getSettings();
+    const [data, userProfile] = await Promise.all([getReadings(), getProfile()]);
     setReadings(data);
-    setSettings(appSettings);
+    setProfile(userProfile);
   }, []);
 
   useFocusEffect(
@@ -101,7 +100,7 @@ export function HomeScreen() {
         <View style={styles.header}>
           <View>
             <Text style={[styles.greeting, { color: colors.text }]}>
-              Olá{settings?.userName ? ', ' + settings.userName : ''}
+              Olá{profile?.name ? ', ' + profile.name : ''}
             </Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Monitoramento de pressão arterial</Text>
           </View>
