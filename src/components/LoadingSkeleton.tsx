@@ -6,7 +6,7 @@ import {
   ViewProps,
 } from 'react-native';
 import { createPulseAnimation } from '../utils/animations';
-import { colors } from '../theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface LoadingSkeletonProps extends ViewProps {
   width?: number | string;
@@ -25,6 +25,7 @@ export function LoadingSkeleton({
   style,
   ...props
 }: LoadingSkeletonProps) {
+  const { colors } = useTheme();
   const opacity = useRef(createPulseAnimation()).current;
 
   return (
@@ -36,6 +37,7 @@ export function LoadingSkeleton({
           height,
           borderRadius,
           opacity,
+          backgroundColor: colors.surfaceLight,
         },
         style,
       ]}
@@ -48,8 +50,10 @@ export function LoadingSkeleton({
  * Loading skeleton card (simulates a ReadingCard)
  */
 export function LoadingCardSkeleton() {
+  const { colors } = useTheme();
+
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       <View style={styles.cardLeft}>
         <LoadingSkeleton width="60%" height={48} />
         <LoadingSkeleton width="40%" height={32} style={{ marginTop: 12 }} />
@@ -68,8 +72,10 @@ export function LoadingCardSkeleton() {
  * Loading skeleton for stats display
  */
 export function LoadingStatSkeleton() {
+  const { colors } = useTheme();
+
   return (
-    <View style={styles.statCard}>
+    <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       <LoadingSkeleton width="100%" height={48} />
       <LoadingSkeleton width="100%" height={16} style={{ marginTop: 12 }} />
     </View>
@@ -91,14 +97,11 @@ export function LoadingSkeletonList({ count = 3 }: { count?: number }) {
 
 const styles = StyleSheet.create({
   skeleton: {
-    backgroundColor: colors.surfaceLight,
     borderRadius: 4,
   },
   card: {
-    backgroundColor: colors.surface,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: colors.border,
     padding: 24,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -114,10 +117,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   statCard: {
-    backgroundColor: colors.surface,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: colors.border,
     padding: 24,
     alignItems: 'center',
     marginBottom: 16,

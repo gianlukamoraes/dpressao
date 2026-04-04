@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { BPClassification } from '../types';
-import { borderRadius, fontSize, spacing, colors } from '../theme';
+import { borderRadius, fontSize, spacing } from '../theme';
 
 interface Props {
   classification: BPClassification;

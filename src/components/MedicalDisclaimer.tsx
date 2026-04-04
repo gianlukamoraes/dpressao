@@ -1,15 +1,18 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, borderRadius, fontSize } from '../theme';
+import { spacing, borderRadius, fontSize } from '../theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 export function MedicalDisclaimer() {
+  const { colors } = useTheme();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.surface, borderLeftColor: colors.hypertension2 }]}>
       <View style={styles.iconAndText}>
         <Text style={styles.icon}>⚠️</Text>
         <View style={styles.textContainer}>
-          <Text style={styles.bold}>Apenas para registro pessoal.</Text>
-          <Text style={styles.text}>Não substitui consulta médica. Em emergência, procure um hospital.</Text>
+          <Text style={[styles.bold, { color: colors.text }]}>Apenas para registro pessoal.</Text>
+          <Text style={[styles.text, { color: colors.textMuted }]}>Não substitui consulta médica. Em emergência, procure um hospital.</Text>
         </View>
       </View>
     </View>
@@ -18,10 +21,8 @@ export function MedicalDisclaimer() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     borderLeftWidth: 4,
-    borderLeftColor: colors.hypertension2,
     padding: spacing.md,
   },
   iconAndText: {
@@ -39,11 +40,9 @@ const styles = StyleSheet.create({
   bold: {
     fontSize: fontSize.xs,
     fontWeight: '700',
-    color: colors.text,
   },
   text: {
     fontSize: fontSize.xs,
-    color: colors.textMuted,
     lineHeight: 16,
   },
 });

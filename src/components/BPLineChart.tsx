@@ -2,7 +2,8 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
 import { LineChart } from 'react-native-gifted-charts';
 import { BloodPressureReading } from '../types';
-import { colors, spacing, borderRadius, fontSize } from '../theme';
+import { spacing, borderRadius, fontSize } from '../theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface TooltipItem {
   value: number;
@@ -26,6 +27,7 @@ export function BPLineChart({
   goalSystolic,
   goalDiastolic,
 }: BPLineChartProps) {
+  const { colors } = useTheme();
   const { width } = useWindowDimensions();
   const chartWidth = width - spacing.lg * 4;
 
@@ -55,8 +57,8 @@ export function BPLineChart({
 
   if (readings.length === 0) {
     return (
-      <View style={[styles.container, styles.empty]}>
-        <Text style={styles.emptyText}>Sem dados para exibir</Text>
+      <View style={[styles.container, styles.empty, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.emptyText, { color: colors.textMuted }]}>Sem dados para exibir</Text>
       </View>
     );
   }
@@ -64,7 +66,7 @@ export function BPLineChart({
   const TRANSPARENT = 'transparent';
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <LineChart
         data={systolicData}
         data2={diastolicData}
@@ -129,7 +131,7 @@ export function BPLineChart({
             const dia = items[1]?.value;
             const pul = items[2]?.value;
             return (
-              <View style={styles.tooltip}>
+              <View style={[styles.tooltip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 {showSystolic && sys !== undefined && (
                   <Text style={[styles.tooltipLine, { color: colors.hypertension2 }]}>
                     SIS: {sys} mmHg
@@ -157,7 +159,6 @@ export function BPLineChart({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.sm,
     overflow: 'hidden',
@@ -169,14 +170,11 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: fontSize.sm,
-    color: colors.textMuted,
   },
   tooltip: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.sm,
     padding: spacing.xs,
     borderWidth: 1,
-    borderColor: colors.border,
     gap: 2,
   },
   tooltipLine: {

@@ -8,8 +8,9 @@ import {
   Text,
   TouchableOpacity,
 } from 'react-native';
-import { colors, spacing, borderRadius, fontSize } from '../theme';
+import { spacing, borderRadius, fontSize } from '../theme';
 import { hapticWarning } from '../utils/haptics';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface SwipeableCardProps extends ViewProps {
   children: React.ReactNode;
@@ -30,6 +31,7 @@ export function SwipeableCard({
   style,
   ...props
 }: SwipeableCardProps) {
+  const { colors } = useTheme();
   const pan = useRef(new Animated.ValueXY()).current;
   const panResponder = useRef(
     PanResponder.create({
@@ -69,7 +71,7 @@ export function SwipeableCard({
   return (
     <View style={[styles.container, style]} {...props}>
       {/* Delete button background */}
-      <View style={styles.deleteBackground}>
+      <View style={[styles.deleteBackground, { backgroundColor: colors.hypertension2 }]}>
         <TouchableOpacity
           style={styles.deleteButton}
           onPress={handleDelete}
@@ -84,6 +86,7 @@ export function SwipeableCard({
         style={[
           styles.content,
           {
+            backgroundColor: colors.surface,
             transform: [{ translateX: pan.x }],
           },
         ]}
@@ -107,7 +110,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     width: 80,
-    backgroundColor: colors.hypertension2,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: borderRadius.md,
@@ -123,7 +125,5 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     fontSize: fontSize.sm,
   },
-  content: {
-    backgroundColor: colors.surface,
-  },
+  content: {},
 });
