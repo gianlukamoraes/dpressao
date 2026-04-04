@@ -1,0 +1,41 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E53535"/>
+      <stop offset="100%" stop-color="#8B1A1A"/>
+    </linearGradient>
+    <linearGradient id="heartShine" x1="320" y1="140" x2="700" y2="600" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#FFD5D5" stop-opacity="0.92"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+
+  <!-- Subtle inner glow -->
+  <rect width="1024" height="1024" fill="radial-gradient(circle at 40% 35%, rgba(255,255,255,0.12) 0%, transparent 65%)"/>
+
+  <!-- Heart shape (centered, large) -->
+  <path d="M512 820
+    C512 820 160 590 160 340
+    C160 230 240 145 340 145
+    C400 145 460 175 512 230
+    C564 175 624 145 684 145
+    C784 145 864 230 864 340
+    C864 590 512 820 512 820Z"
+    fill="url(#heartShine)"
+  />
+
+  <!-- EKG / pulse line across the heart -->
+  <polyline
+    points="175,490 270,490 310,375 370,610 425,440 480,490 544,490 590,400 640,565 700,490 840,490"
+    stroke="#C81919"
+    stroke-width="36"
+    fill="none"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    opacity="0.85"
+  />
+</svg>
