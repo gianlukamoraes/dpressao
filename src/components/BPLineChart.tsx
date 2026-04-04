@@ -1,8 +1,13 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
 import { LineChart } from 'react-native-gifted-charts';
 import { BloodPressureReading } from '../types';
 import { colors, spacing, borderRadius, fontSize } from '../theme';
+
+interface TooltipItem {
+  value: number;
+  label?: string;
+}
 
 interface BPLineChartProps {
   readings: BloodPressureReading[];
@@ -33,25 +38,28 @@ export function BPLineChart({
   }
 
   // Chart: oldest → newest (left to right)
-  const sorted = [...readings].reverse();
+  const { systolicData, diastolicData, pulseData } = useMemo(() => {
+    const sortedReadings = [...readings].reverse();
+    const step = Math.max(1, Math.floor(sortedReadings.length / 5));
 
-  const labelStep = Math.max(1, Math.floor(sorted.length / 5));
+    const makeData = (getValue: (r: BloodPressureReading) => number) =>
+      sortedReadings.map((r, i) => ({
+        value: getValue(r),
+        label:
+          i % step === 0
+            ? new Date(r.date).toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+              })
+            : '',
+      }));
 
-  const makeData = (getValue: (r: BloodPressureReading) => number) =>
-    sorted.map((r, i) => ({
-      value: getValue(r),
-      label:
-        i % labelStep === 0
-          ? new Date(r.date).toLocaleDateString('pt-BR', {
-              day: '2-digit',
-              month: '2-digit',
-            })
-          : '',
-    }));
-
-  const systolicData = makeData((r) => r.systolic);
-  const diastolicData = makeData((r) => r.diastolic);
-  const pulseData = makeData((r) => r.pulse);
+    return {
+      systolicData: makeData((r) => r.systolic),
+      diastolicData: makeData((r) => r.diastolic),
+      pulseData: makeData((r) => r.pulse),
+    };
+  }, [readings]);
 
   const TRANSPARENT = 'transparent';
 
@@ -116,7 +124,7 @@ export function BPLineChart({
           pointerLabelWidth: 120,
           pointerLabelHeight: 72,
           autoAdjustPointerLabelPosition: true,
-          pointerLabelComponent: (items: { value: number }[]) => {
+          pointerLabelComponent: (items: TooltipItem[]) => {
             const sys = items[0]?.value;
             const dia = items[1]?.value;
             const pul = items[2]?.value;
