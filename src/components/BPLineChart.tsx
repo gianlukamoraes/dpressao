@@ -1,166 +1,147 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import Svg, { Line, Circle, Text as SvgText, Polyline, Defs, LinearGradient, Stop } from 'react-native-svg';
+import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
+import { LineChart } from 'react-native-gifted-charts';
 import { BloodPressureReading } from '../types';
-import { colors } from '../theme';
+import { colors, spacing, borderRadius, fontSize } from '../theme';
 
 interface BPLineChartProps {
   readings: BloodPressureReading[];
-  height?: number;
-  width?: number;
+  showSystolic?: boolean;
+  showDiastolic?: boolean;
+  showPulse?: boolean;
+  goalSystolic?: number;
+  goalDiastolic?: number;
 }
 
-const DEFAULT_HEIGHT = 300;
-const DEFAULT_WIDTH = 100;
-const PADDING = 40;
-const POINT_RADIUS = 4;
+export function BPLineChart({
+  readings,
+  showSystolic = true,
+  showDiastolic = true,
+  showPulse = true,
+  goalSystolic,
+  goalDiastolic,
+}: BPLineChartProps) {
+  const { width } = useWindowDimensions();
+  const chartWidth = width - spacing.lg * 4;
 
-export function BPLineChart({ readings, height = DEFAULT_HEIGHT, width = DEFAULT_WIDTH }: BPLineChartProps) {
   if (readings.length === 0) {
     return (
-      <View style={[styles.container, { height }]}>
-        <Svg height={height} width={width}>
-          <SvgText x={width / 2} y={height / 2} textAnchor="middle" fill={colors.textMuted} fontSize="14">
-            Sem dados
-          </SvgText>
-        </Svg>
+      <View style={[styles.container, styles.empty]}>
+        <Text style={styles.emptyText}>Sem dados para exibir</Text>
       </View>
     );
   }
 
-  const chartWidth = width - 2 * PADDING;
-  const chartHeight = height - 2 * PADDING;
+  // Chart: oldest → newest (left to right)
+  const sorted = [...readings].reverse();
 
-  // Get min/max for scaling
-  const allValues = readings.flatMap((r) => [r.systolic, r.diastolic]);
-  const minValue = Math.min(...allValues, 60);
-  const maxValue = Math.max(...allValues, 180);
-  const valueRange = maxValue - minValue || 10;
+  const labelStep = Math.max(1, Math.floor(sorted.length / 5));
 
-  // Scale functions
-  const scaleX = (index: number) => PADDING + (index / Math.max(readings.length - 1, 1)) * chartWidth;
-  const scaleY = (value: number) => height - PADDING - ((value - minValue) / valueRange) * chartHeight;
+  const makeData = (getValue: (r: BloodPressureReading) => number) =>
+    sorted.map((r, i) => ({
+      value: getValue(r),
+      label:
+        i % labelStep === 0
+          ? new Date(r.date).toLocaleDateString('pt-BR', {
+              day: '2-digit',
+              month: '2-digit',
+            })
+          : '',
+    }));
 
-  // Build polyline points
-  const systolicPoints = readings
-    .map((r, i) => `${scaleX(i)},${scaleY(r.systolic)}`)
-    .join(' ');
+  const systolicData = makeData((r) => r.systolic);
+  const diastolicData = makeData((r) => r.diastolic);
+  const pulseData = makeData((r) => r.pulse);
 
-  const diastolicPoints = readings
-    .map((r, i) => `${scaleX(i)},${scaleY(r.diastolic)}`)
-    .join(' ');
-
-  // Reference lines (120/80)
-  const line120Y = scaleY(120);
-  const line80Y = scaleY(80);
+  const TRANSPARENT = 'transparent';
 
   return (
-    <View style={[styles.container, { height }]}>
-      <Svg height={height} width={width}>
-        <Defs>
-          <LinearGradient id="systolicGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <Stop offset="0%" stopColor={colors.hypertension2} stopOpacity="0.3" />
-            <Stop offset="100%" stopColor={colors.hypertension2} stopOpacity="0.05" />
-          </LinearGradient>
-          <LinearGradient id="diastolicGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <Stop offset="0%" stopColor={colors.primary} stopOpacity="0.3" />
-            <Stop offset="100%" stopColor={colors.primary} stopOpacity="0.05" />
-          </LinearGradient>
-        </Defs>
-
-        {/* Grid lines */}
-        <Line
-          x1={PADDING}
-          y1={height - PADDING}
-          x2={width - PADDING}
-          y2={height - PADDING}
-          stroke={colors.border}
-          strokeWidth={1}
-        />
-        <Line
-          x1={PADDING}
-          y1={PADDING}
-          x2={PADDING}
-          y2={height - PADDING}
-          stroke={colors.border}
-          strokeWidth={1}
-        />
-
-        {/* Reference lines */}
-        <Line
-          x1={PADDING}
-          y1={line120Y}
-          x2={width - PADDING}
-          y2={line120Y}
-          stroke={colors.hypertension2}
-          strokeWidth={1}
-          strokeDasharray={[4, 4]}
-          opacity={0.5}
-        />
-        <Line
-          x1={PADDING}
-          y1={line80Y}
-          x2={width - PADDING}
-          y2={line80Y}
-          stroke={colors.elevated}
-          strokeWidth={1}
-          strokeDasharray={[4, 4]}
-          opacity={0.5}
-        />
-
-        {/* Systolic line */}
-        <Polyline
-          points={systolicPoints}
-          fill="none"
-          stroke={colors.hypertension2}
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-
-        {/* Diastolic line */}
-        <Polyline
-          points={diastolicPoints}
-          fill="none"
-          stroke={colors.primary}
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-
-        {/* Data points - Systolic */}
-        {readings.map((r, i) => (
-          <Circle
-            key={`sys-${i}`}
-            cx={scaleX(i)}
-            cy={scaleY(r.systolic)}
-            r={POINT_RADIUS}
-            fill={colors.hypertension2}
-          />
-        ))}
-
-        {/* Data points - Diastolic */}
-        {readings.map((r, i) => (
-          <Circle
-            key={`dia-${i}`}
-            cx={scaleX(i)}
-            cy={scaleY(r.diastolic)}
-            r={POINT_RADIUS}
-            fill={colors.primary}
-          />
-        ))}
-
-        {/* Y-axis labels */}
-        <SvgText x={PADDING - 10} y={scaleY(120) + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">
-          120
-        </SvgText>
-        <SvgText x={PADDING - 10} y={scaleY(80) + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">
-          80
-        </SvgText>
-        <SvgText x={PADDING - 10} y={height - PADDING + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">
-          {minValue.toFixed(0)}
-        </SvgText>
-      </Svg>
+    <View style={styles.container}>
+      <LineChart
+        data={systolicData}
+        data2={diastolicData}
+        data3={pulseData}
+        color={showSystolic ? colors.hypertension2 : TRANSPARENT}
+        color2={showDiastolic ? colors.primary : TRANSPARENT}
+        color3={showPulse ? colors.normal : TRANSPARENT}
+        thickness={2}
+        thickness2={2}
+        thickness3={2}
+        dataPointsColor={showSystolic ? colors.hypertension2 : TRANSPARENT}
+        dataPointsColor2={showDiastolic ? colors.primary : TRANSPARENT}
+        dataPointsColor3={showPulse ? colors.normal : TRANSPARENT}
+        dataPointsRadius={4}
+        hideDataPoints={!showSystolic}
+        hideDataPoints2={!showDiastolic}
+        hideDataPoints3={!showPulse}
+        width={chartWidth}
+        height={220}
+        curved
+        initialSpacing={8}
+        endSpacing={8}
+        yAxisTextStyle={{ color: colors.textMuted, fontSize: 10 }}
+        xAxisLabelTextStyle={{ color: colors.textMuted, fontSize: 9 }}
+        yAxisColor={colors.border}
+        xAxisColor={colors.border}
+        rulesColor={colors.border}
+        rulesType="solid"
+        referenceLine1={!!goalSystolic}
+        referenceLine1Position={goalSystolic ?? 0}
+        referenceLine1Config={{
+          color: colors.hypertension2,
+          dashWidth: 5,
+          dashGap: 5,
+          thickness: 1,
+          opacity: 0.6,
+          labelText: goalSystolic ? `Meta ${goalSystolic}` : '',
+          labelTextStyle: { color: colors.hypertension2, fontSize: 9 },
+        }}
+        referenceLine2={!!goalDiastolic}
+        referenceLine2Position={goalDiastolic ?? 0}
+        referenceLine2Config={{
+          color: colors.primary,
+          dashWidth: 5,
+          dashGap: 5,
+          thickness: 1,
+          opacity: 0.6,
+          labelText: goalDiastolic ? `Meta ${goalDiastolic}` : '',
+          labelTextStyle: { color: colors.primary, fontSize: 9 },
+        }}
+        pointerConfig={{
+          pointerStripHeight: 200,
+          pointerStripColor: colors.border,
+          pointerStripWidth: 1,
+          pointerColor: colors.textSecondary,
+          radius: 5,
+          pointerLabelWidth: 120,
+          pointerLabelHeight: 72,
+          autoAdjustPointerLabelPosition: true,
+          pointerLabelComponent: (items: { value: number }[]) => {
+            const sys = items[0]?.value;
+            const dia = items[1]?.value;
+            const pul = items[2]?.value;
+            return (
+              <View style={styles.tooltip}>
+                {showSystolic && sys !== undefined && (
+                  <Text style={[styles.tooltipLine, { color: colors.hypertension2 }]}>
+                    SIS: {sys} mmHg
+                  </Text>
+                )}
+                {showDiastolic && dia !== undefined && (
+                  <Text style={[styles.tooltipLine, { color: colors.primary }]}>
+                    DIA: {dia} mmHg
+                  </Text>
+                )}
+                {showPulse && pul !== undefined && (
+                  <Text style={[styles.tooltipLine, { color: colors.normal }]}>
+                    PUL: {pul} bpm
+                  </Text>
+                )}
+              </View>
+            );
+          },
+        }}
+      />
     </View>
   );
 }
@@ -169,7 +150,29 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 8,
+    borderRadius: borderRadius.lg,
+    padding: spacing.sm,
+    overflow: 'hidden',
+  },
+  empty: {
+    height: 220,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    fontSize: fontSize.sm,
+    color: colors.textMuted,
+  },
+  tooltip: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.sm,
+    padding: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 2,
+  },
+  tooltipLine: {
+    fontSize: fontSize.xs,
+    fontWeight: '700',
   },
 });
