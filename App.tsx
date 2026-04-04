@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -72,7 +73,7 @@ function HomeTabs() {
 }
 
 function AppContent() {
-  const { colors } = useTheme();
+  const { colors, isLiquidGlass } = useTheme();
   const [disclaimerAccepted, setDisclaimerAccepted] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -147,6 +148,10 @@ function AppContent() {
 
   return (
     <NavigationContainer>
+      <StatusBar
+        barStyle={isLiquidGlass ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+      />
       <Stack.Navigator
         screenOptions={{
           headerStyle: { backgroundColor: colors.background },

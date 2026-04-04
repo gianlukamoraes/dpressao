@@ -35,9 +35,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     await updateSettings({ theme: newTheme });
   }, []);
 
-  const colors = theme === 'liquidGlass'
-    ? (liquidGlassColors as unknown as ColorsType)
-    : classicColors;
+  const colors: ColorsType = theme === 'liquidGlass' ? liquidGlassColors : classicColors;
 
   return (
     <ThemeContext.Provider value={{ theme, isLiquidGlass: theme === 'liquidGlass', colors, setTheme }}>
