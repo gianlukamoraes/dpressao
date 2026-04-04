@@ -8,6 +8,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   reminderEnabled: false,
   reminderTime: '08:00',
   disclaimerAcceptedAt: null,
+  theme: 'classic',
 };
 
 export async function getSettings(): Promise<AppSettings> {

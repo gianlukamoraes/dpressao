@@ -37,6 +37,7 @@ export interface AppSettings {
   reminderEnabled: boolean;
   reminderTime: string; // HH:00 format
   disclaimerAcceptedAt: string | null;
+  theme?: 'classic' | 'liquidGlass';
 }
 
 export type BiologicalSex = 'male' | 'female' | 'other';
