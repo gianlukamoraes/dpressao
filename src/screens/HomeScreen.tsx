@@ -26,7 +26,7 @@ import { spacing, borderRadius, fontSize } from '../theme';
 
 export function HomeScreen() {
   const navigation = useNavigation<any>();
-  const { colors } = useTheme();
+  const { colors, isLiquidGlass } = useTheme();
   const [readings, setReadings] = useState<BloodPressureReading[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [settings, setSettings] = useState<AppSettings | null>(null);
@@ -70,6 +70,18 @@ export function HomeScreen() {
     : null;
   const recentReadings = readings.slice(0, 3);
 
+  // Mapeia categoria → cores do tema ativo (para o card principal)
+  const CATEGORY_COLORS: Record<string, { color: string; bgColor: string }> = {
+    normal: { color: colors.normal, bgColor: colors.normalBg },
+    elevated: { color: colors.elevated, bgColor: colors.elevatedBg },
+    hypertension1: { color: colors.hypertension1, bgColor: colors.hypertension1Bg },
+    hypertension2: { color: colors.hypertension2, bgColor: colors.hypertension2Bg },
+    crisis: { color: colors.crisis, bgColor: colors.crisisBg },
+  };
+  const cardColors = latestClassification
+    ? (CATEGORY_COLORS[latestClassification.category] ?? { color: latestClassification.color, bgColor: latestClassification.bgColor })
+    : null;
+
   return (
     <GlassBackground>
       <ScrollView
@@ -96,18 +108,21 @@ export function HomeScreen() {
         </View>
 
         {/* Última medição */}
-        {latest && latestClassification ? (
+        {latest && latestClassification && cardColors ? (
           <TouchableOpacity
             style={[
               styles.latestCard,
               {
-                borderColor: latestClassification.color,
-                backgroundColor: latestClassification.bgColor,
+                backgroundColor: cardColors.bgColor,
+                borderColor: isLiquidGlass ? cardColors.color + '55' : cardColors.color,
+                borderWidth: isLiquidGlass ? 1 : 2,
+                overflow: 'hidden',
               },
             ]}
             onPress={() => navigation.navigate('ReadingDetail', { reading: latest })}
             activeOpacity={0.8}
           >
+            {isLiquidGlass && <View style={styles.glassHighlight} />}
             <View style={styles.latestCardContent}>
               {/* Header row */}
               <View style={styles.latestHeader}>
@@ -120,7 +135,7 @@ export function HomeScreen() {
               {/* Main BP value */}
               <View style={styles.latestBP}>
                 <Text
-                  style={[styles.latestValue, { color: latestClassification.color }]}
+                  style={[styles.latestValue, { color: cardColors.color }]}
                   numberOfLines={1}
                   adjustsFontSizeToFit
                   minimumFontScale={0.5}
@@ -134,14 +149,17 @@ export function HomeScreen() {
               <BPBadge classification={latestClassification} size="md" />
 
               {/* Só pulso — sem repetir SIS/DIA */}
-              <View style={styles.pulseRow}>
+              <View style={[
+                styles.pulseRow,
+                isLiquidGlass && { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.12)' },
+              ]}>
                 <Text style={styles.pulseIcon}>💓</Text>
                 <Text style={[styles.pulseValue, { color: colors.text }]}>{latest.pulse}</Text>
                 <Text style={[styles.pulseUnit, { color: colors.textMuted }]}>bpm</Text>
               </View>
 
               {latestClassification.description ? (
-                <Text style={[styles.description, { color: latestClassification.color }]}>
+                <Text style={[styles.description, { color: cardColors.color }]}>
                   {latestClassification.description}
                 </Text>
               ) : null}
@@ -235,6 +253,17 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     fontWeight: '400',
   },
+  // ── Glass highlight (specular, LG only) ───────────────────────
+  glassHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.30)',
+    zIndex: 1,
+  },
+
   // ── Latest card ────────────────────────────────────────────────
   latestCard: {
     borderRadius: borderRadius.md,
