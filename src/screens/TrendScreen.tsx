@@ -21,7 +21,9 @@ import {
   calcVariabilityInsight,
   calcGoalInsight,
 } from '../utils/insights';
-import { colors, spacing, borderRadius, fontSize } from '../theme';
+import { GlassBackground } from '../components/GlassBackground';
+import { useTheme } from '../contexts/ThemeContext';
+import { spacing, borderRadius, fontSize } from '../theme';
 
 type TimePeriod = 7 | 30 | 90 | typeof Infinity;
 
@@ -32,20 +34,13 @@ const PERIOD_OPTIONS: { label: string; value: TimePeriod }[] = [
   { label: 'Tudo', value: Infinity },
 ];
 
-const CATEGORY_CONFIG = [
-  { key: 'normal',        label: 'Normal',       emoji: '🟢', color: colors.normal },
-  { key: 'elevated',      label: 'Elevada',      emoji: '🟡', color: colors.elevated },
-  { key: 'hypertension1', label: 'Hiper 1',      emoji: '🟠', color: colors.hypertension1 },
-  { key: 'hypertension2', label: 'Hiper 2',      emoji: '🔴', color: colors.hypertension2 },
-  { key: 'crisis',        label: 'Crise',        emoji: '🚨', color: colors.crisis },
-] as const;
-
-const STATUS_COLORS: Record<InsightCard['status'], string> = {
-  good:    colors.normal,
-  warning: colors.elevated,
-  alert:   colors.hypertension2,
-  neutral: colors.textSecondary,
-};
+const CATEGORY_KEYS = [
+  { key: 'normal' as const,        label: 'Normal',       emoji: '🟢' },
+  { key: 'elevated' as const,      label: 'Elevada',      emoji: '🟡' },
+  { key: 'hypertension1' as const, label: 'Hiper 1',      emoji: '🟠' },
+  { key: 'hypertension2' as const, label: 'Hiper 2',      emoji: '🔴' },
+  { key: 'crisis' as const,        label: 'Crise',        emoji: '🚨' },
+];
 
 function filterByPeriod(readings: BloodPressureReading[], period: TimePeriod): BloodPressureReading[] {
   if (period === Infinity) return readings;
@@ -68,12 +63,28 @@ function avg(arr: number[]): number {
 }
 
 export function TrendScreen() {
+  const { colors } = useTheme();
   const [readings, setReadings] = useState<BloodPressureReading[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [period, setPeriod] = useState<TimePeriod>(30);
   const [showSystolic, setShowSystolic] = useState(true);
   const [showDiastolic, setShowDiastolic] = useState(true);
   const [showPulse, setShowPulse] = useState(true);
+
+  const CATEGORY_CONFIG = [
+    { key: 'normal' as const,        label: 'Normal',       emoji: '🟢', color: colors.normal },
+    { key: 'elevated' as const,      label: 'Elevada',      emoji: '🟡', color: colors.elevated },
+    { key: 'hypertension1' as const, label: 'Hiper 1',      emoji: '🟠', color: colors.hypertension1 },
+    { key: 'hypertension2' as const, label: 'Hiper 2',      emoji: '🔴', color: colors.hypertension2 },
+    { key: 'crisis' as const,        label: 'Crise',        emoji: '🚨', color: colors.crisis },
+  ];
+
+  const STATUS_COLORS: Record<InsightCard['status'], string> = {
+    good:    colors.normal,
+    warning: colors.elevated,
+    alert:   colors.hypertension2,
+    neutral: colors.textSecondary,
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -115,211 +126,221 @@ export function TrendScreen() {
   }, [readings, period, profile]);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+    <GlassBackground>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.content, { paddingBottom: spacing.xxl }]}>
+        <StatusBar barStyle="light-content" backgroundColor={colors.background} />
 
-      <View style={styles.header}>
-        <Text style={styles.title}>📊 Tendências</Text>
-        <Text style={styles.subtitle}>Análise de padrões de pressão arterial</Text>
-      </View>
-
-      {/* Seletor de período */}
-      <View style={styles.periodRow}>
-        {PERIOD_OPTIONS.map(({ label, value }) => (
-          <TouchableOpacity
-            key={label}
-            style={[styles.periodBtn, period === value && styles.periodBtnActive]}
-            onPress={() => setPeriod(value)}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.periodBtnText, period === value && styles.periodBtnTextActive]}>
-              {label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Gráfico */}
-      <BPLineChart
-        readings={filtered}
-        showSystolic={showSystolic}
-        showDiastolic={showDiastolic}
-        showPulse={showPulse}
-        goalSystolic={goal?.systolic}
-        goalDiastolic={goal?.diastolic}
-      />
-
-      {/* Toggles de linha */}
-      <View style={styles.toggleRow}>
-        {[
-          { label: 'SIS', active: showSystolic, color: colors.hypertension2, onPress: () => setShowSystolic((v) => !v) },
-          { label: 'DIA', active: showDiastolic, color: colors.primary, onPress: () => setShowDiastolic((v) => !v) },
-          { label: 'PULSO', active: showPulse, color: colors.normal, onPress: () => setShowPulse((v) => !v) },
-        ].map(({ label, active, color, onPress }) => (
-          <TouchableOpacity
-            key={label}
-            style={[styles.toggleBtn, active && { borderColor: color, backgroundColor: color + '22' }]}
-            onPress={onPress}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.toggleDot, { backgroundColor: active ? color : colors.border }]} />
-            <Text style={[styles.toggleText, active && { color }]}>{label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Insights */}
-      {insights.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>💡 Insights</Text>
-          {insights.map((insight, i) => {
-            const accentColor = STATUS_COLORS[insight.status];
-            return (
-              <View key={insight.title} style={[styles.insightCard, { borderLeftColor: accentColor }]}>
-                <View style={styles.insightHeader}>
-                  <Text style={styles.insightIcon}>{insight.icon}</Text>
-                  <Text style={styles.insightTitle}>{insight.title}</Text>
-                  <Text style={[styles.insightValue, { color: accentColor }]}>{insight.value}</Text>
-                </View>
-                <Text style={styles.insightDescription}>{insight.description}</Text>
-              </View>
-            );
-          })}
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.text }]}>📊 Tendências</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Análise de padrões de pressão arterial</Text>
         </View>
-      )}
 
-      {/* Estatísticas */}
-      {filtered.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📈 Estatísticas do Período</Text>
-          <View style={styles.statsCard}>
+        {/* Seletor de período */}
+        <View style={styles.periodRow}>
+          {PERIOD_OPTIONS.map(({ label, value }) => (
+            <TouchableOpacity
+              key={label}
+              style={[
+                styles.periodBtn,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+                period === value && { backgroundColor: colors.primary, borderColor: colors.primary },
+              ]}
+              onPress={() => setPeriod(value)}
+              activeOpacity={0.7}
+            >
+              <Text style={[
+                styles.periodBtnText,
+                { color: colors.textSecondary },
+                period === value && { color: colors.text, fontWeight: '900' },
+              ]}>
+                {label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
-            {/* Médias */}
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{avgSys}/{avgDia}</Text>
-                <Text style={styles.statLabel}>mmHg médio</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{avgPul}</Text>
-                <Text style={styles.statLabel}>bpm médio</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{filtered.length}</Text>
-                <Text style={styles.statLabel}>{filtered.length === 1 ? 'medição' : 'medições'}</Text>
-              </View>
-            </View>
+        {/* Gráfico */}
+        <BPLineChart
+          readings={filtered}
+          showSystolic={showSystolic}
+          showDiastolic={showDiastolic}
+          showPulse={showPulse}
+          goalSystolic={goal?.systolic}
+          goalDiastolic={goal?.diastolic}
+        />
 
-            <View style={styles.statsSeparator} />
+        {/* Toggles de linha */}
+        <View style={styles.toggleRow}>
+          {[
+            { label: 'SIS', active: showSystolic, color: colors.hypertension2, onPress: () => setShowSystolic((v) => !v) },
+            { label: 'DIA', active: showDiastolic, color: colors.primary, onPress: () => setShowDiastolic((v) => !v) },
+            { label: 'PULSO', active: showPulse, color: colors.normal, onPress: () => setShowPulse((v) => !v) },
+          ].map(({ label, active, color, onPress }) => (
+            <TouchableOpacity
+              key={label}
+              style={[
+                styles.toggleBtn,
+                { borderColor: colors.border, backgroundColor: colors.surface },
+                active && { borderColor: color, backgroundColor: color + '22' },
+              ]}
+              onPress={onPress}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.toggleDot, { backgroundColor: active ? color : colors.border }]} />
+              <Text style={[styles.toggleText, { color: colors.textMuted }, active && { color }]}>{label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
-            {/* Intervalo */}
-            <View style={styles.rangeRow}>
-              <Text style={styles.rangeLabel}>Sistólica</Text>
-              <Text style={styles.rangeValue}>{minSys} – {maxSys} mmHg</Text>
-            </View>
-            <View style={styles.rangeRow}>
-              <Text style={styles.rangeLabel}>Diastólica</Text>
-              <Text style={styles.rangeValue}>{minDia} – {maxDia} mmHg</Text>
-            </View>
-
-            <View style={styles.statsSeparator} />
-
-            {/* Distribuição com barras */}
-            <Text style={styles.distTitle}>Distribuição</Text>
-            {CATEGORY_CONFIG.map(({ key, label, emoji, color }) => {
-              const count = distributions[key];
-              const pct = filtered.length > 0 ? Math.round((count / filtered.length) * 100) : 0;
+        {/* Insights */}
+        {insights.length > 0 && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>💡 Insights</Text>
+            {insights.map((insight, i) => {
+              const accentColor = STATUS_COLORS[insight.status];
               return (
-                <View key={key} style={styles.distRow}>
-                  <Text style={styles.distEmoji}>{emoji}</Text>
-                  <Text style={styles.distLabel}>{label}</Text>
-                  <View style={styles.distBarTrack}>
-                    <View style={[styles.distBarFill, { width: `${pct}%`, backgroundColor: color }]} />
+                <View key={insight.title} style={[styles.insightCard, { backgroundColor: colors.surface, borderLeftColor: accentColor }]}>
+                  <View style={styles.insightHeader}>
+                    <Text style={styles.insightIcon}>{insight.icon}</Text>
+                    <Text style={[styles.insightTitle, { color: colors.textSecondary }]}>{insight.title}</Text>
+                    <Text style={[styles.insightValue, { color: accentColor }]}>{insight.value}</Text>
                   </View>
-                  <Text style={styles.distCount}>{count}</Text>
-                  <Text style={styles.distPct}>{pct}%</Text>
+                  <Text style={[styles.insightDescription, { color: colors.textSecondary }]}>{insight.description}</Text>
                 </View>
               );
             })}
           </View>
-        </View>
-      )}
+        )}
 
-      {filtered.length === 0 && (
-        <View style={styles.empty}>
-          <Text style={styles.emptyEmoji}>📭</Text>
-          <Text style={styles.emptyTitle}>Sem dados neste período</Text>
-          <Text style={styles.emptyText}>Registre mais medições para ver tendências.</Text>
-        </View>
-      )}
-    </ScrollView>
+        {/* Estatísticas */}
+        {filtered.length > 0 && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>📈 Estatísticas do Período</Text>
+            <View style={[styles.statsCard, { backgroundColor: colors.surface }]}>
+
+              {/* Médias */}
+              <View style={styles.statsRow}>
+                <View style={styles.statItem}>
+                  <Text style={[styles.statValue, { color: colors.text }]}>{avgSys}/{avgDia}</Text>
+                  <Text style={[styles.statLabel, { color: colors.textMuted }]}>mmHg médio</Text>
+                </View>
+                <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+                <View style={styles.statItem}>
+                  <Text style={[styles.statValue, { color: colors.text }]}>{avgPul}</Text>
+                  <Text style={[styles.statLabel, { color: colors.textMuted }]}>bpm médio</Text>
+                </View>
+                <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+                <View style={styles.statItem}>
+                  <Text style={[styles.statValue, { color: colors.text }]}>{filtered.length}</Text>
+                  <Text style={[styles.statLabel, { color: colors.textMuted }]}>{filtered.length === 1 ? 'medição' : 'medições'}</Text>
+                </View>
+              </View>
+
+              <View style={[styles.statsSeparator, { backgroundColor: colors.border }]} />
+
+              {/* Intervalo */}
+              <View style={styles.rangeRow}>
+                <Text style={[styles.rangeLabel, { color: colors.textSecondary }]}>Sistólica</Text>
+                <Text style={[styles.rangeValue, { color: colors.text }]}>{minSys} – {maxSys} mmHg</Text>
+              </View>
+              <View style={styles.rangeRow}>
+                <Text style={[styles.rangeLabel, { color: colors.textSecondary }]}>Diastólica</Text>
+                <Text style={[styles.rangeValue, { color: colors.text }]}>{minDia} – {maxDia} mmHg</Text>
+              </View>
+
+              <View style={[styles.statsSeparator, { backgroundColor: colors.border }]} />
+
+              {/* Distribuição com barras */}
+              <Text style={[styles.distTitle, { color: colors.textMuted }]}>Distribuição</Text>
+              {CATEGORY_CONFIG.map(({ key, label, emoji, color }) => {
+                const count = distributions[key];
+                const pct = filtered.length > 0 ? Math.round((count / filtered.length) * 100) : 0;
+                return (
+                  <View key={key} style={styles.distRow}>
+                    <Text style={styles.distEmoji}>{emoji}</Text>
+                    <Text style={[styles.distLabel, { color: colors.textSecondary }]}>{label}</Text>
+                    <View style={[styles.distBarTrack, { backgroundColor: colors.border }]}>
+                      <View style={[styles.distBarFill, { width: `${pct}%`, backgroundColor: color }]} />
+                    </View>
+                    <Text style={[styles.distCount, { color: colors.text }]}>{count}</Text>
+                    <Text style={[styles.distPct, { color: colors.textMuted }]}>{pct}%</Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
+        {filtered.length === 0 && (
+          <View style={styles.empty}>
+            <Text style={styles.emptyEmoji}>📭</Text>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>Sem dados neste período</Text>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Registre mais medições para ver tendências.</Text>
+          </View>
+        )}
+      </ScrollView>
+    </GlassBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.lg },
+  content: { padding: spacing.lg, gap: spacing.lg },
   header: { marginBottom: spacing.sm },
-  title: { fontSize: fontSize.xxxl, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
-  subtitle: { fontSize: fontSize.md, color: colors.textSecondary, marginTop: spacing.xs },
+  title: { fontSize: fontSize.xxxl, fontWeight: '900', letterSpacing: -0.5 },
+  subtitle: { fontSize: fontSize.md, marginTop: spacing.xs },
 
   periodRow: { flexDirection: 'row', gap: spacing.sm },
   periodBtn: {
     flex: 1, paddingVertical: spacing.sm, borderRadius: borderRadius.md,
-    backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.border, alignItems: 'center',
+    borderWidth: 2, alignItems: 'center',
   },
-  periodBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  periodBtnText: { fontSize: fontSize.sm, fontWeight: '700', color: colors.textSecondary },
-  periodBtnTextActive: { color: colors.text, fontWeight: '900' },
+  periodBtnText: { fontSize: fontSize.sm, fontWeight: '700' },
 
   toggleRow: { flexDirection: 'row', gap: spacing.sm, justifyContent: 'center' },
   toggleBtn: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
     paddingHorizontal: spacing.md, paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full, borderWidth: 1.5, borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderRadius: borderRadius.full, borderWidth: 1.5,
   },
   toggleDot: { width: 8, height: 8, borderRadius: 4 },
-  toggleText: { fontSize: fontSize.xs, fontWeight: '700', color: colors.textMuted },
+  toggleText: { fontSize: fontSize.xs, fontWeight: '700' },
 
   section: { gap: spacing.sm },
-  sectionTitle: { fontSize: fontSize.md, fontWeight: '900', color: colors.text, textTransform: 'uppercase', letterSpacing: 1.5 },
+  sectionTitle: { fontSize: fontSize.md, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.5 },
 
   insightCard: {
-    backgroundColor: colors.surface, borderRadius: borderRadius.md,
+    borderRadius: borderRadius.md,
     padding: spacing.md, borderLeftWidth: 4, gap: spacing.xs,
   },
   insightHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   insightIcon: { fontSize: fontSize.md, width: 22, textAlign: 'center' },
-  insightTitle: { flex: 1, fontSize: fontSize.sm, fontWeight: '700', color: colors.textSecondary },
+  insightTitle: { flex: 1, fontSize: fontSize.sm, fontWeight: '700' },
   insightValue: { fontSize: fontSize.md, fontWeight: '900' },
-  insightDescription: { fontSize: fontSize.xs, color: colors.textSecondary, lineHeight: 16 },
+  insightDescription: { fontSize: fontSize.xs, lineHeight: 16 },
 
-  statsCard: { backgroundColor: colors.surface, borderRadius: borderRadius.lg, padding: spacing.md, gap: spacing.sm },
+  statsCard: { borderRadius: borderRadius.lg, padding: spacing.md, gap: spacing.sm },
   statsRow: { flexDirection: 'row', alignItems: 'center' },
   statItem: { flex: 1, alignItems: 'center', gap: 2 },
-  statValue: { fontSize: fontSize.xl, fontWeight: '900', color: colors.text },
-  statLabel: { fontSize: fontSize.xs, color: colors.textMuted, fontWeight: '600' },
-  statDivider: { width: 1, height: 40, backgroundColor: colors.border },
-  statsSeparator: { height: 1, backgroundColor: colors.border },
+  statValue: { fontSize: fontSize.xl, fontWeight: '900' },
+  statLabel: { fontSize: fontSize.xs, fontWeight: '600' },
+  statDivider: { width: 1, height: 40 },
+  statsSeparator: { height: 1 },
 
   rangeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  rangeLabel: { fontSize: fontSize.sm, color: colors.textSecondary },
-  rangeValue: { fontSize: fontSize.sm, fontWeight: '700', color: colors.text },
+  rangeLabel: { fontSize: fontSize.sm },
+  rangeValue: { fontSize: fontSize.sm, fontWeight: '700' },
 
-  distTitle: { fontSize: fontSize.xs, color: colors.textMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
+  distTitle: { fontSize: fontSize.xs, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
   distRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   distEmoji: { fontSize: fontSize.sm, width: 16, textAlign: 'center' },
-  distLabel: { width: 60, fontSize: fontSize.xs, color: colors.textSecondary },
-  distBarTrack: { flex: 1, height: 8, backgroundColor: colors.border, borderRadius: 4, overflow: 'hidden' },
+  distLabel: { width: 60, fontSize: fontSize.xs },
+  distBarTrack: { flex: 1, height: 8, borderRadius: 4, overflow: 'hidden' },
   distBarFill: { height: '100%', borderRadius: 4 },
-  distCount: { width: 20, fontSize: fontSize.xs, fontWeight: '700', color: colors.text, textAlign: 'right' },
-  distPct: { width: 32, fontSize: fontSize.xs, color: colors.textMuted, textAlign: 'right' },
+  distCount: { width: 20, fontSize: fontSize.xs, fontWeight: '700', textAlign: 'right' },
+  distPct: { width: 32, fontSize: fontSize.xs, textAlign: 'right' },
 
   empty: { alignItems: 'center', paddingTop: spacing.xxl, gap: spacing.sm },
   emptyEmoji: { fontSize: 48 },
-  emptyTitle: { fontSize: fontSize.lg, fontWeight: '700', color: colors.text },
-  emptyText: { fontSize: fontSize.sm, color: colors.textSecondary, textAlign: 'center' },
+  emptyTitle: { fontSize: fontSize.lg, fontWeight: '700' },
+  emptyText: { fontSize: fontSize.sm, textAlign: 'center' },
 });

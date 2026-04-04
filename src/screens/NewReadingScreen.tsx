@@ -17,7 +17,9 @@ import { BloodPressureReading } from '../types';
 import { classifyBP } from '../utils/bloodPressure';
 import { BPBadge } from '../components/BPBadge';
 import { SYMPTOMS, SYMPTOMS_INITIAL_VISIBLE } from '../utils/symptoms';
-import { colors, spacing, borderRadius, fontSize } from '../theme';
+import { GlassBackground } from '../components/GlassBackground';
+import { useTheme } from '../contexts/ThemeContext';
+import { spacing, borderRadius, fontSize } from '../theme';
 import { RootStackParamList } from '../types/navigation';
 
 type NewReadingRouteProps = RouteProp<RootStackParamList, 'NewReading'>;
@@ -25,6 +27,7 @@ type NewReadingRouteProps = RouteProp<RootStackParamList, 'NewReading'>;
 export function NewReadingScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<NewReadingRouteProps>();
+  const { colors } = useTheme();
   const [systolic, setSystolic] = useState('');
   const [diastolic, setDiastolic] = useState('');
   const [pulse, setPulse] = useState('');
@@ -128,170 +131,176 @@ export function NewReadingScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <GlassBackground>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
 
-        {/* Cabeçalho */}
-        <View style={styles.header}>
-          <Text style={styles.title}>{isEditing ? 'Editar Medição' : 'Nova Medição'}</Text>
-          <Text style={styles.subtitle}>
-            {new Date().toLocaleDateString('pt-BR', {
-              weekday: 'long',
-              day: '2-digit',
-              month: 'long',
-              year: 'numeric',
-            })}
-          </Text>
-          <Text style={styles.time}>
-            {new Date().toLocaleTimeString('pt-BR', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </Text>
-        </View>
-
-        {/* Preview classificação */}
-        {previewClassification && (
-          <View style={[styles.previewCard, { borderColor: previewClassification.color, backgroundColor: previewClassification.bgColor }]}>
-            <BPBadge classification={previewClassification} size="lg" />
-            <Text style={[styles.previewDescription, { color: previewClassification.color }]}>
-              {previewClassification.description}
+          {/* Cabeçalho */}
+          <View style={styles.header}>
+            <Text style={[styles.title, { color: colors.text }]}>{isEditing ? 'Editar Medição' : 'Nova Medição'}</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              {new Date().toLocaleDateString('pt-BR', {
+                weekday: 'long',
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+              })}
+            </Text>
+            <Text style={[styles.time, { color: colors.primary }]}>
+              {new Date().toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
             </Text>
           </View>
-        )}
 
-        {/* Campos principais */}
-        <View style={styles.fieldsRow}>
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Sistólica</Text>
-            <Text style={styles.fieldHint}>mmHg</Text>
-            <TextInput
-              style={styles.fieldInput}
-              value={systolic}
-              onChangeText={setSystolic}
-              keyboardType="numeric"
-              placeholder="120"
-              placeholderTextColor={colors.textMuted}
-              maxLength={3}
-              returnKeyType="next"
-            />
+          {/* Preview classificação */}
+          {previewClassification && (
+            <View style={[styles.previewCard, { borderColor: previewClassification.color, backgroundColor: previewClassification.bgColor }]}>
+              <BPBadge classification={previewClassification} size="lg" />
+              <Text style={[styles.previewDescription, { color: previewClassification.color }]}>
+                {previewClassification.description}
+              </Text>
+            </View>
+          )}
+
+          {/* Campos principais */}
+          <View style={[styles.fieldsRow, { backgroundColor: colors.surface }]}>
+            <View style={styles.fieldGroup}>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Sistólica</Text>
+              <Text style={[styles.fieldHint, { color: colors.textMuted }]}>mmHg</Text>
+              <TextInput
+                style={[styles.fieldInput, { color: colors.text, borderBottomColor: colors.border }]}
+                value={systolic}
+                onChangeText={setSystolic}
+                keyboardType="numeric"
+                placeholder="120"
+                placeholderTextColor={colors.textMuted}
+                maxLength={3}
+                returnKeyType="next"
+              />
+            </View>
+
+            <Text style={[styles.separator, { color: colors.textMuted }]}>/</Text>
+
+            <View style={styles.fieldGroup}>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Diastólica</Text>
+              <Text style={[styles.fieldHint, { color: colors.textMuted }]}>mmHg</Text>
+              <TextInput
+                style={[styles.fieldInput, { color: colors.text, borderBottomColor: colors.border }]}
+                value={diastolic}
+                onChangeText={setDiastolic}
+                keyboardType="numeric"
+                placeholder="80"
+                placeholderTextColor={colors.textMuted}
+                maxLength={3}
+                returnKeyType="next"
+              />
+            </View>
           </View>
 
-          <Text style={styles.separator}>/</Text>
-
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Diastólica</Text>
-            <Text style={styles.fieldHint}>mmHg</Text>
-            <TextInput
-              style={styles.fieldInput}
-              value={diastolic}
-              onChangeText={setDiastolic}
-              keyboardType="numeric"
-              placeholder="80"
-              placeholderTextColor={colors.textMuted}
-              maxLength={3}
-              returnKeyType="next"
-            />
+          {/* Pulso */}
+          <View style={[styles.pulseRow, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>💓 Pulso</Text>
+            <View style={styles.pulseInputWrapper}>
+              <TextInput
+                style={[styles.pulseInput, { color: colors.text, borderBottomColor: colors.border }]}
+                value={pulse}
+                onChangeText={setPulse}
+                keyboardType="numeric"
+                placeholder="72"
+                placeholderTextColor={colors.textMuted}
+                maxLength={3}
+              />
+              <Text style={[styles.pulseUnit, { color: colors.textSecondary }]}>bpm</Text>
+            </View>
           </View>
-        </View>
 
-        {/* Pulso */}
-        <View style={styles.pulseRow}>
-          <Text style={styles.fieldLabel}>💓 Pulso</Text>
-          <View style={styles.pulseInputWrapper}>
-            <TextInput
-              style={styles.pulseInput}
-              value={pulse}
-              onChangeText={setPulse}
-              keyboardType="numeric"
-              placeholder="72"
-              placeholderTextColor={colors.textMuted}
-              maxLength={3}
-            />
-            <Text style={styles.pulseUnit}>bpm</Text>
-          </View>
-        </View>
-
-        {/* Sintomas */}
-        <View style={styles.symptomsContainer}>
-          <Text style={styles.fieldLabel}>🩺 Como você está se sentindo?</Text>
-          <View style={styles.chipsRow}>
-            {visibleSymptoms.map((symptom) => {
-              const selected = selectedSymptoms.includes(symptom);
-              return (
+          {/* Sintomas */}
+          <View style={[styles.symptomsContainer, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>🩺 Como você está se sentindo?</Text>
+            <View style={styles.chipsRow}>
+              {visibleSymptoms.map((symptom) => {
+                const selected = selectedSymptoms.includes(symptom);
+                return (
+                  <TouchableOpacity
+                    key={symptom}
+                    style={[
+                      styles.chip,
+                      { backgroundColor: colors.background, borderColor: colors.border },
+                      selected && { backgroundColor: colors.primary, borderColor: colors.primary },
+                    ]}
+                    onPress={() => toggleSymptom(symptom)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[
+                      styles.chipText,
+                      { color: colors.textSecondary },
+                      selected && { color: colors.text, fontWeight: '700' },
+                    ]}>
+                      {symptom}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+              {!showAllSymptoms && (
                 <TouchableOpacity
-                  key={symptom}
-                  style={[styles.chip, selected && styles.chipSelected]}
-                  onPress={() => toggleSymptom(symptom)}
+                  style={[styles.chipMore, { borderColor: colors.primary }]}
+                  onPress={() => setShowAllSymptoms(true)}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
-                    {symptom}
-                  </Text>
+                  <Text style={[styles.chipMoreText, { color: colors.primary }]}>Ver mais...</Text>
                 </TouchableOpacity>
-              );
-            })}
-            {!showAllSymptoms && (
-              <TouchableOpacity
-                style={styles.chipMore}
-                onPress={() => setShowAllSymptoms(true)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.chipMoreText}>Ver mais...</Text>
-              </TouchableOpacity>
-            )}
+              )}
+            </View>
           </View>
-        </View>
 
-        {/* Observação */}
-        <View style={styles.noteContainer}>
-          <Text style={styles.fieldLabel}>💬 Sintoma não listado / Observação (opcional)</Text>
-          <TextInput
-            style={styles.noteInput}
-            value={note}
-            onChangeText={setNote}
-            placeholder="Ex: após exercício, em repouso, estressado..."
-            placeholderTextColor={colors.textMuted}
-            multiline
-            numberOfLines={3}
-            maxLength={200}
-          />
-          <Text style={styles.charCount}>{note.length}/200</Text>
-        </View>
+          {/* Observação */}
+          <View style={[styles.noteContainer, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>💬 Sintoma não listado / Observação (opcional)</Text>
+            <TextInput
+              style={[styles.noteInput, { color: colors.text }]}
+              value={note}
+              onChangeText={setNote}
+              placeholder="Ex: após exercício, em repouso, estressado..."
+              placeholderTextColor={colors.textMuted}
+              multiline
+              numberOfLines={3}
+              maxLength={200}
+            />
+            <Text style={[styles.charCount, { color: colors.textMuted }]}>{note.length}/200</Text>
+          </View>
 
-        {/* Botões */}
-        <TouchableOpacity
-          style={[styles.saveButton, !isValid && styles.saveButtonDisabled]}
-          onPress={handleSave}
-          disabled={!isValid || loading}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.saveButtonText}>
-            {loading ? 'Salvando...' : '✅ Salvar Medição'}
-          </Text>
-        </TouchableOpacity>
+          {/* Botões */}
+          <TouchableOpacity
+            style={[styles.saveButton, { backgroundColor: colors.primary }, !isValid && styles.saveButtonDisabled]}
+            onPress={handleSave}
+            disabled={!isValid || loading}
+            activeOpacity={0.85}
+          >
+            <Text style={[styles.saveButtonText, { color: colors.text }]}>
+              {loading ? 'Salvando...' : '✅ Salvar Medição'}
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.cancelButtonText}>Cancelar</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.cancelButtonText, { color: colors.textMuted }]}>Cancelar</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </GlassBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   content: {
     padding: spacing.md,
     paddingBottom: spacing.xxl,
@@ -303,18 +312,15 @@ const styles = StyleSheet.create({
   title: {
     fontSize: fontSize.xxl,
     fontWeight: '800',
-    color: colors.text,
   },
   subtitle: {
     fontSize: fontSize.sm,
-    color: colors.textSecondary,
     marginTop: 2,
     textTransform: 'capitalize',
   },
   time: {
     fontSize: fontSize.xl,
     fontWeight: '700',
-    color: colors.primary,
     marginTop: 4,
   },
   previewCard: {
@@ -331,7 +337,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: spacing.md,
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
   },
@@ -342,31 +347,25 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontSize: fontSize.sm,
-    color: colors.textSecondary,
     fontWeight: '600',
   },
   fieldHint: {
     fontSize: fontSize.xs,
-    color: colors.textMuted,
   },
   fieldInput: {
     fontSize: 40,
     fontWeight: '800',
-    color: colors.text,
     textAlign: 'center',
     borderBottomWidth: 2,
-    borderBottomColor: colors.border,
     paddingVertical: spacing.xs,
     width: '100%',
   },
   separator: {
     fontSize: 40,
     fontWeight: '300',
-    color: colors.textMuted,
     marginBottom: spacing.xs,
   },
   pulseRow: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     flexDirection: 'row',
@@ -381,19 +380,15 @@ const styles = StyleSheet.create({
   pulseInput: {
     fontSize: fontSize.xxl,
     fontWeight: '700',
-    color: colors.text,
     textAlign: 'right',
     borderBottomWidth: 2,
-    borderBottomColor: colors.border,
     paddingVertical: spacing.xs,
     minWidth: 60,
   },
   pulseUnit: {
     fontSize: fontSize.md,
-    color: colors.textSecondary,
   },
   symptomsContainer: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     gap: spacing.sm,
@@ -407,55 +402,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.background,
     borderWidth: 1.5,
-    borderColor: colors.border,
-  },
-  chipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
   },
   chipText: {
     fontSize: fontSize.sm,
-    color: colors.textSecondary,
     fontWeight: '600',
-  },
-  chipTextSelected: {
-    color: colors.text,
-    fontWeight: '700',
   },
   chipMore: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
     borderWidth: 1.5,
-    borderColor: colors.primary,
   },
   chipMoreText: {
     fontSize: fontSize.sm,
-    color: colors.primary,
     fontWeight: '700',
   },
   noteContainer: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     gap: spacing.xs,
   },
   noteInput: {
     fontSize: fontSize.md,
-    color: colors.text,
     textAlignVertical: 'top',
     paddingTop: spacing.xs,
     minHeight: 72,
   },
   charCount: {
     fontSize: fontSize.xs,
-    color: colors.textMuted,
     textAlign: 'right',
   },
   saveButton: {
-    backgroundColor: colors.primary,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     alignItems: 'center',
@@ -467,7 +445,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: fontSize.lg,
     fontWeight: '700',
-    color: colors.text,
   },
   cancelButton: {
     alignItems: 'center',
@@ -475,6 +452,5 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     fontSize: fontSize.md,
-    color: colors.textMuted,
   },
 });

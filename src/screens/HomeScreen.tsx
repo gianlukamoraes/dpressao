@@ -20,21 +20,24 @@ import {
 import { BPBadge } from '../components/BPBadge';
 import { ReadingCard } from '../components/ReadingCard';
 import { MedicalDisclaimer } from '../components/MedicalDisclaimer';
-import { colors, spacing, borderRadius, fontSize } from '../theme';
-
-const REFERENCE_ITEMS = [
-  { label: 'Normal', value: '< 130/< 85', color: colors.normal },
-  { label: 'Elevada', value: '130–139/85–89', color: colors.elevated },
-  { label: 'Hipertensão 1', value: '140–159/90–99', color: colors.hypertension1 },
-  { label: 'Hipertensão 2', value: '160–179/100–109', color: colors.hypertension2 },
-  { label: 'Crise', value: '≥ 180/≥ 110', color: colors.crisis },
-];
+import { GlassBackground } from '../components/GlassBackground';
+import { useTheme } from '../contexts/ThemeContext';
+import { spacing, borderRadius, fontSize } from '../theme';
 
 export function HomeScreen() {
   const navigation = useNavigation<any>();
+  const { colors } = useTheme();
   const [readings, setReadings] = useState<BloodPressureReading[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [settings, setSettings] = useState<AppSettings | null>(null);
+
+  const REFERENCE_ITEMS = [
+    { label: 'Normal', value: '< 130/< 85', color: colors.normal },
+    { label: 'Elevada', value: '130–139/85–89', color: colors.elevated },
+    { label: 'Hipertensão 1', value: '140–159/90–99', color: colors.hypertension1 },
+    { label: 'Hipertensão 2', value: '160–179/100–109', color: colors.hypertension2 },
+    { label: 'Crise', value: '≥ 180/≥ 110', color: colors.crisis },
+  ];
 
   const loadReadings = useCallback(async () => {
     const data = await getReadings();
@@ -68,154 +71,151 @@ export function HomeScreen() {
   const recentReadings = readings.slice(0, 3);
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-          tintColor={colors.primary}
-        />
-      }
-    >
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>
-            Olá{settings?.userName ? ', ' + settings.userName : ''}
-          </Text>
-          <Text style={styles.subtitle}>Monitoramento de pressão arterial</Text>
-        </View>
-      </View>
-
-      {/* Última medição */}
-      {latest && latestClassification ? (
-        <TouchableOpacity
-          style={[
-            styles.latestCard,
-            {
-              borderColor: latestClassification.color,
-              backgroundColor: latestClassification.bgColor,
-            },
-          ]}
-          onPress={() => navigation.navigate('ReadingDetail', { reading: latest })}
-          activeOpacity={0.8}
-        >
-          <View style={styles.latestCardContent}>
-            {/* Header row */}
-            <View style={styles.latestHeader}>
-              <Text style={styles.latestLabel}>ÚLTIMA MEDIÇÃO</Text>
-              <Text style={styles.latestDate}>
-                {formatRelativeDate(latest.date)} · {formatDateTime(latest.date).split(' às ')[1]}
-              </Text>
-            </View>
-
-            {/* Main BP value */}
-            <View style={styles.latestBP}>
-              <Text
-                style={[styles.latestValue, { color: latestClassification.color }]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.5}
-              >
-                {latest.systolic}/{latest.diastolic}
-              </Text>
-              <Text style={styles.latestUnit}>mmHg</Text>
-            </View>
-
-            {/* Status badge */}
-            <BPBadge classification={latestClassification} size="md" />
-
-            {/* Só pulso — sem repetir SIS/DIA */}
-            <View style={styles.pulseRow}>
-              <Text style={styles.pulseIcon}>💓</Text>
-              <Text style={styles.pulseValue}>{latest.pulse}</Text>
-              <Text style={styles.pulseUnit}>bpm</Text>
-            </View>
-
-            {latestClassification.description ? (
-              <Text style={[styles.description, { color: latestClassification.color }]}>
-                {latestClassification.description}
-              </Text>
-            ) : null}
-          </View>
-        </TouchableOpacity>
-      ) : (
-        <View style={styles.emptyCard}>
-          <Text style={styles.emptyEmoji}>🩺</Text>
-          <Text style={styles.emptyTitle}>Nenhuma medição ainda</Text>
-          <Text style={styles.emptyText}>
-            Registre sua primeira medição de pressão arterial.
-          </Text>
-        </View>
-      )}
-
-      {/* Botão nova medição */}
-      <TouchableOpacity
-        style={styles.newButton}
-        onPress={() => navigation.navigate('NewReading')}
-        activeOpacity={0.85}
+    <GlassBackground>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={[styles.content, { paddingBottom: spacing.xxl }]}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+          />
+        }
       >
-        <Text style={styles.newButtonIcon}>➕</Text>
-        <Text style={styles.newButtonText}>Nova Medição</Text>
-      </TouchableOpacity>
+        <StatusBar barStyle="light-content" backgroundColor={colors.background} />
 
-      {/* Medições recentes */}
-      {recentReadings.length > 0 && (
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Medições Recentes</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('History')}>
-              <Text style={styles.seeAll}>Ver tudo</Text>
-            </TouchableOpacity>
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={[styles.greeting, { color: colors.text }]}>
+              Olá{settings?.userName ? ', ' + settings.userName : ''}
+            </Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Monitoramento de pressão arterial</Text>
           </View>
-          {recentReadings.map((reading) => (
-            <ReadingCard
-              key={reading.id}
-              reading={reading}
-              onDelete={loadReadings}
-            />
-          ))}
         </View>
-      )}
 
-      {/* Referência rápida */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Tabela de Referência</Text>
-        <View style={styles.referenceCard}>
-          {REFERENCE_ITEMS.map((item, i) => (
-            <View
-              key={i}
-              style={[
-                styles.referenceRow,
-                i < REFERENCE_ITEMS.length - 1 && styles.referenceRowBorder,
-              ]}
-            >
-              <View style={[styles.referenceDot, { backgroundColor: item.color }]} />
-              <Text style={styles.referenceLabel}>{item.label}</Text>
-              <Text style={[styles.referenceValue, { color: item.color }]}>{item.value}</Text>
+        {/* Última medição */}
+        {latest && latestClassification ? (
+          <TouchableOpacity
+            style={[
+              styles.latestCard,
+              {
+                borderColor: latestClassification.color,
+                backgroundColor: latestClassification.bgColor,
+              },
+            ]}
+            onPress={() => navigation.navigate('ReadingDetail', { reading: latest })}
+            activeOpacity={0.8}
+          >
+            <View style={styles.latestCardContent}>
+              {/* Header row */}
+              <View style={styles.latestHeader}>
+                <Text style={[styles.latestLabel, { color: colors.textMuted }]}>ÚLTIMA MEDIÇÃO</Text>
+                <Text style={[styles.latestDate, { color: colors.textSecondary }]}>
+                  {formatRelativeDate(latest.date)} · {formatDateTime(latest.date).split(' às ')[1]}
+                </Text>
+              </View>
+
+              {/* Main BP value */}
+              <View style={styles.latestBP}>
+                <Text
+                  style={[styles.latestValue, { color: latestClassification.color }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.5}
+                >
+                  {latest.systolic}/{latest.diastolic}
+                </Text>
+                <Text style={[styles.latestUnit, { color: colors.textMuted }]}>mmHg</Text>
+              </View>
+
+              {/* Status badge */}
+              <BPBadge classification={latestClassification} size="md" />
+
+              {/* Só pulso — sem repetir SIS/DIA */}
+              <View style={styles.pulseRow}>
+                <Text style={styles.pulseIcon}>💓</Text>
+                <Text style={[styles.pulseValue, { color: colors.text }]}>{latest.pulse}</Text>
+                <Text style={[styles.pulseUnit, { color: colors.textMuted }]}>bpm</Text>
+              </View>
+
+              {latestClassification.description ? (
+                <Text style={[styles.description, { color: latestClassification.color }]}>
+                  {latestClassification.description}
+                </Text>
+              ) : null}
             </View>
-          ))}
-        </View>
-      </View>
+          </TouchableOpacity>
+        ) : (
+          <View style={[styles.emptyCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={styles.emptyEmoji}>🩺</Text>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>Nenhuma medição ainda</Text>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+              Registre sua primeira medição de pressão arterial.
+            </Text>
+          </View>
+        )}
 
-      {/* Medical Disclaimer Footer */}
-      <MedicalDisclaimer />
-    </ScrollView>
+        {/* Botão nova medição */}
+        <TouchableOpacity
+          style={[styles.newButton, { backgroundColor: colors.primary }]}
+          onPress={() => navigation.navigate('NewReading')}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.newButtonIcon}>➕</Text>
+          <Text style={styles.newButtonText}>Nova Medição</Text>
+        </TouchableOpacity>
+
+        {/* Medições recentes */}
+        {recentReadings.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Medições Recentes</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('History')}>
+                <Text style={[styles.seeAll, { color: colors.primary }]}>Ver tudo</Text>
+              </TouchableOpacity>
+            </View>
+            {recentReadings.map((reading) => (
+              <ReadingCard
+                key={reading.id}
+                reading={reading}
+                onDelete={loadReadings}
+              />
+            ))}
+          </View>
+        )}
+
+        {/* Referência rápida */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Tabela de Referência</Text>
+          <View style={[styles.referenceCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            {REFERENCE_ITEMS.map((item, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.referenceRow,
+                  i < REFERENCE_ITEMS.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.surfaceLight },
+                ]}
+              >
+                <View style={[styles.referenceDot, { backgroundColor: item.color }]} />
+                <Text style={[styles.referenceLabel, { color: colors.textSecondary }]}>{item.label}</Text>
+                <Text style={[styles.referenceValue, { color: item.color }]}>{item.value}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Medical Disclaimer Footer */}
+        <MedicalDisclaimer />
+      </ScrollView>
+    </GlassBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   content: {
     padding: spacing.lg,
-    paddingBottom: spacing.xxl,
     gap: spacing.lg,
   },
   header: {
@@ -228,12 +228,10 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: fontSize.xxl,
     fontWeight: '900',
-    color: colors.text,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: fontSize.md,
-    color: colors.textSecondary,
     marginTop: spacing.xs,
     fontWeight: '400',
   },
@@ -241,7 +239,6 @@ const styles = StyleSheet.create({
   latestCard: {
     borderRadius: borderRadius.md,
     borderWidth: 2,
-    borderColor: colors.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -259,13 +256,11 @@ const styles = StyleSheet.create({
   },
   latestLabel: {
     fontSize: fontSize.xs,
-    color: colors.textMuted,
     fontWeight: '800',
     letterSpacing: 1.2,
   },
   latestDate: {
     fontSize: fontSize.xs,
-    color: colors.textSecondary,
     fontWeight: '500',
   },
   latestBP: {
@@ -276,12 +271,10 @@ const styles = StyleSheet.create({
   latestValue: {
     fontSize: 56,
     fontWeight: '900',
-    color: colors.text,
     flex: 1,
   },
   latestUnit: {
     fontSize: fontSize.sm,
-    color: colors.textMuted,
     marginBottom: 8,
     fontWeight: '600',
   },
@@ -304,11 +297,9 @@ const styles = StyleSheet.create({
   pulseValue: {
     fontSize: fontSize.xl2,
     fontWeight: '900',
-    color: colors.text,
   },
   pulseUnit: {
     fontSize: fontSize.sm,
-    color: colors.textMuted,
     fontWeight: '600',
   },
   description: {
@@ -318,10 +309,8 @@ const styles = StyleSheet.create({
 
   // ── Empty state ────────────────────────────────────────────────
   emptyCard: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     borderWidth: 1.5,
-    borderColor: colors.border,
     padding: spacing.xl,
     alignItems: 'center',
     gap: spacing.md,
@@ -332,17 +321,14 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: fontSize.xl2,
     fontWeight: '900',
-    color: colors.text,
   },
   emptyText: {
     fontSize: fontSize.sm,
-    color: colors.textSecondary,
     textAlign: 'center',
   },
 
   // ── Nova Medição button ────────────────────────────────────────
   newButton: {
-    backgroundColor: colors.primary,
     borderRadius: borderRadius.md,
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.lg,
@@ -379,22 +365,18 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: fontSize.xl2,
     fontWeight: '900',
-    color: colors.text,
     letterSpacing: -0.5,
     marginBottom: spacing.sm,
   },
   seeAll: {
     fontSize: fontSize.sm,
-    color: colors.primary,
     fontWeight: '700',
   },
 
   // ── Reference table ────────────────────────────────────────────
   referenceCard: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     borderWidth: 1.5,
-    borderColor: colors.border,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -409,10 +391,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     gap: spacing.md,
   },
-  referenceRowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceLight,
-  },
   referenceDot: {
     width: 10,
     height: 10,
@@ -422,7 +400,6 @@ const styles = StyleSheet.create({
   referenceLabel: {
     flex: 1,
     fontSize: fontSize.md,
-    color: colors.textSecondary,
     fontWeight: '500',
   },
   referenceValue: {
