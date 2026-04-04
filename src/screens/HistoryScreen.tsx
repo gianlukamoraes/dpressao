@@ -183,11 +183,19 @@ export function HistoryScreen() {
             {readings.length > 0 && (
               <View style={styles.summaryCard}>
                 <Text style={styles.summaryTitle}>
-                  Média dos últimos {Math.min(readings.length, 30)} registros
+                  Média dos últimos {Math.min(readings.length, 30)}{' '}
+                  {Math.min(readings.length, 30) === 1 ? 'registro' : 'registros'}
                 </Text>
                 <View style={styles.summaryStats}>
                   <View style={styles.summaryItem}>
-                    <Text style={styles.summaryValue}>{avgSystolic}/{avgDiastolic}</Text>
+                    <Text
+                      style={styles.summaryValue}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.6}
+                    >
+                      {avgSystolic}/{avgDiastolic}
+                    </Text>
                     <Text style={styles.summaryLabel}>mmHg</Text>
                   </View>
                   <View style={styles.summaryDivider} />
@@ -198,7 +206,9 @@ export function HistoryScreen() {
                   <View style={styles.summaryDivider} />
                   <View style={styles.summaryItem}>
                     <Text style={styles.summaryValue}>{readings.length}</Text>
-                    <Text style={styles.summaryLabel}>medições</Text>
+                    <Text style={styles.summaryLabel}>
+                      {readings.length === 1 ? 'medição' : 'medições'}
+                    </Text>
                   </View>
                 </View>
               </View>
@@ -335,10 +345,16 @@ const styles = StyleSheet.create({
   summaryCard: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: colors.border,
     padding: spacing.lg,
     gap: spacing.md,
+    marginBottom: spacing.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
   },
   summaryTitle: {
     fontSize: fontSize.xs,
@@ -350,16 +366,20 @@ const styles = StyleSheet.create({
   summaryStats: {
     flexDirection: 'row',
     gap: spacing.md,
+    alignItems: 'stretch',
   },
   summaryItem: {
     flex: 1,
     alignItems: 'center',
     gap: 2,
+    minWidth: 0,
   },
   summaryValue: {
     fontSize: fontSize.xxl,
     fontWeight: '900',
     color: colors.text,
+    width: '100%',
+    textAlign: 'center',
   },
   summaryLabel: {
     fontSize: fontSize.xs,
@@ -369,6 +389,7 @@ const styles = StyleSheet.create({
   summaryDivider: {
     width: 1,
     backgroundColor: colors.border,
+    alignSelf: 'stretch',
   },
   filtersWrapper: {
     marginBottom: spacing.md,
@@ -383,14 +404,14 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.full,
     backgroundColor: colors.surface,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: colors.border,
   },
   filterChipActive: {
     backgroundColor: colors.primary,
-    borderColor: colors.border,
+    borderColor: colors.primary,
   },
   filterEmoji: {
     fontSize: fontSize.sm,
@@ -401,7 +422,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   filterLabelActive: {
-    color: colors.text,
+    color: '#FFFFFF',
     fontWeight: '900',
   },
   dateGroup: {
@@ -441,7 +462,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   emptyButtonText: {
-    color: colors.text,
+    color: '#FFFFFF',
     fontWeight: '700',
     fontSize: fontSize.md,
   },
@@ -468,7 +489,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: colors.border,
   },
   exportButtonIcon: {
