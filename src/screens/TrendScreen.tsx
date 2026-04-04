@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -63,6 +63,10 @@ function getPreviousPeriod(readings: BloodPressureReading[], period: TimePeriod)
   });
 }
 
+function avg(arr: number[]): number {
+  return arr.length > 0 ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0;
+}
+
 export function TrendScreen() {
   const [readings, setReadings] = useState<BloodPressureReading[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -82,34 +86,33 @@ export function TrendScreen() {
     }, [])
   );
 
-  const filtered = filterByPeriod(readings, period);
-  const previous = getPreviousPeriod(readings, period);
+  const { filtered, previous, avgSys, avgDia, avgPul, minSys, maxSys, minDia, maxDia, distributions, insights, goal } = useMemo(() => {
+    const filtered = filterByPeriod(readings, period);
+    const previous = getPreviousPeriod(readings, period);
 
-  // Statistics
-  const avg = (arr: number[]) =>
-    arr.length > 0 ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0;
+    const avgSys = avg(filtered.map((r) => r.systolic));
+    const avgDia = avg(filtered.map((r) => r.diastolic));
+    const avgPul = avg(filtered.map((r) => r.pulse));
+    const minSys = filtered.length > 0 ? Math.min(...filtered.map((r) => r.systolic)) : 0;
+    const maxSys = filtered.length > 0 ? Math.max(...filtered.map((r) => r.systolic)) : 0;
+    const minDia = filtered.length > 0 ? Math.min(...filtered.map((r) => r.diastolic)) : 0;
+    const maxDia = filtered.length > 0 ? Math.max(...filtered.map((r) => r.diastolic)) : 0;
 
-  const avgSys = avg(filtered.map((r) => r.systolic));
-  const avgDia = avg(filtered.map((r) => r.diastolic));
-  const avgPul = avg(filtered.map((r) => r.pulse));
-  const minSys = filtered.length > 0 ? Math.min(...filtered.map((r) => r.systolic)) : 0;
-  const maxSys = filtered.length > 0 ? Math.max(...filtered.map((r) => r.systolic)) : 0;
-  const minDia = filtered.length > 0 ? Math.min(...filtered.map((r) => r.diastolic)) : 0;
-  const maxDia = filtered.length > 0 ? Math.max(...filtered.map((r) => r.diastolic)) : 0;
+    const distributions = { normal: 0, elevated: 0, hypertension1: 0, hypertension2: 0, crisis: 0 };
+    filtered.forEach((r) => { distributions[classifyBP(r.systolic, r.diastolic).category]++; });
 
-  const distributions = { normal: 0, elevated: 0, hypertension1: 0, hypertension2: 0, crisis: 0 };
-  filtered.forEach((r) => { distributions[classifyBP(r.systolic, r.diastolic).category]++; });
+    const insights: InsightCard[] = [
+      period !== Infinity ? calcTrendInsight(filtered, previous) : null,
+      calcPeakHourInsight(filtered),
+      calcSymptomCorrelation(filtered),
+      calcVariabilityInsight(filtered),
+      profile?.bpGoal ? calcGoalInsight(filtered, profile.bpGoal) : null,
+    ].filter((i): i is InsightCard => i !== null);
 
-  // Insights
-  const insights: InsightCard[] = [
-    period !== Infinity ? calcTrendInsight(filtered, previous) : null,
-    calcPeakHourInsight(filtered),
-    calcSymptomCorrelation(filtered),
-    calcVariabilityInsight(filtered),
-    profile?.bpGoal ? calcGoalInsight(filtered, profile.bpGoal) : null,
-  ].filter((i): i is InsightCard => i !== null);
+    const goal = profile?.bpGoal ?? null;
 
-  const goal = profile?.bpGoal ?? null;
+    return { filtered, previous, avgSys, avgDia, avgPul, minSys, maxSys, minDia, maxDia, distributions, insights, goal };
+  }, [readings, period, profile]);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -172,7 +175,7 @@ export function TrendScreen() {
           {insights.map((insight, i) => {
             const accentColor = STATUS_COLORS[insight.status];
             return (
-              <View key={i} style={[styles.insightCard, { borderLeftColor: accentColor }]}>
+              <View key={insight.title} style={[styles.insightCard, { borderLeftColor: accentColor }]}>
                 <View style={styles.insightHeader}>
                   <Text style={styles.insightIcon}>{insight.icon}</Text>
                   <Text style={styles.insightTitle}>{insight.title}</Text>
