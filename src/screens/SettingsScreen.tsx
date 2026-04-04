@@ -23,10 +23,12 @@ import {
   parseTimeString,
   formatTimeString,
 } from '../utils/notifications';
-import { colors, spacing, borderRadius, fontSize } from '../theme';
+import { spacing, borderRadius, fontSize } from '../theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 export function SettingsScreen() {
   const navigation = useNavigation<any>();
+  const { colors, theme, setTheme } = useTheme();
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [readingCount, setReadingCount] = useState(0);
   const [importing, setImporting] = useState(false);
@@ -177,56 +179,101 @@ export function SettingsScreen() {
 
   if (!settings) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <StatusBar barStyle="light-content" backgroundColor={colors.background} />
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>⚙️ Ajustes</Text>
-        <Text style={styles.subtitle}>Configurações do aplicativo</Text>
+        <Text style={[styles.title, { color: colors.text }]}>⚙️ Ajustes</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Configurações do aplicativo</Text>
+      </View>
+
+      {/* Seção Aparência */}
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>🎨 Aparência</Text>
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.label, { color: colors.text }]}>Tema Visual</Text>
+          <View style={styles.themeRow}>
+            <TouchableOpacity
+              style={[
+                styles.themeChip,
+                { borderColor: colors.border, backgroundColor: colors.surfaceLight },
+                theme === 'classic' && { borderColor: colors.primary, backgroundColor: colors.primary + '22' },
+              ]}
+              onPress={() => setTheme('classic')}
+              activeOpacity={0.7}
+            >
+              <Text style={[
+                styles.themeChipText,
+                { color: colors.textSecondary },
+                theme === 'classic' && { color: colors.primary },
+              ]}>
+                ☀️ Visual Clássico
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.themeChip,
+                { borderColor: colors.border, backgroundColor: colors.surfaceLight },
+                theme === 'liquidGlass' && { borderColor: colors.primary, backgroundColor: colors.primary + '22' },
+              ]}
+              onPress={() => setTheme('liquidGlass')}
+              activeOpacity={0.7}
+            >
+              <Text style={[
+                styles.themeChipText,
+                { color: colors.textSecondary },
+                theme === 'liquidGlass' && { color: colors.primary },
+              ]}>
+                🌙 Liquid Glass
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
 
       {/* Seção Perfil */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>👤 Perfil</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>👤 Perfil</Text>
 
         <TouchableOpacity
-          style={styles.linkButton}
+          style={[styles.linkButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
           onPress={() => navigation.navigate('Profile')}
           activeOpacity={0.7}
         >
           <Text style={styles.linkButtonIcon}>🧑‍⚕️</Text>
           <View style={styles.linkButtonContent}>
-            <Text style={styles.linkButtonTitle}>Perfil Clínico</Text>
-            <Text style={styles.linkButtonSubtitle}>Data de nascimento, medicamentos, exames e mais</Text>
+            <Text style={[styles.linkButtonTitle, { color: colors.text }]}>Perfil Clínico</Text>
+            <Text style={[styles.linkButtonSubtitle, { color: colors.textMuted }]}>Data de nascimento, medicamentos, exames e mais</Text>
           </View>
-          <Text style={styles.linkButtonArrow}>›</Text>
+          <Text style={[styles.linkButtonArrow, { color: colors.textMuted }]}>›</Text>
         </TouchableOpacity>
       </View>
 
       {/* Seção Lembretes */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🔔 Lembretes</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>🔔 Lembretes</Text>
 
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <View style={styles.reminderToggleRow}>
             <View style={styles.reminderToggleLeft}>
-              <Text style={styles.label}>Ativar Lembrete Diário</Text>
-              <Text style={styles.reminderToggleSubtitle}>
+              <Text style={[styles.label, { color: colors.text }]}>Ativar Lembrete Diário</Text>
+              <Text style={[styles.reminderToggleSubtitle, { color: colors.textMuted }]}>
                 Receba uma notificação para medir sua pressão
               </Text>
             </View>
             <TouchableOpacity
               style={[
                 styles.toggleSwitch,
-                reminderEnabled && styles.toggleSwitchActive,
+                { backgroundColor: colors.border },
+                reminderEnabled && { backgroundColor: colors.primary },
               ]}
               onPress={handleToggleReminder}
               activeOpacity={0.7}
@@ -234,7 +281,8 @@ export function SettingsScreen() {
               <View
                 style={[
                   styles.toggleCircle,
-                  reminderEnabled && styles.toggleCircleActive,
+                  { backgroundColor: colors.textMuted },
+                  reminderEnabled && { backgroundColor: colors.text, alignSelf: 'flex-end' },
                 ]}
               />
             </TouchableOpacity>
@@ -242,25 +290,25 @@ export function SettingsScreen() {
 
           {reminderEnabled && (
             <>
-              <View style={styles.divider} />
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
               <View style={styles.reminderTimeRow}>
-                <Text style={styles.label}>Horário</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Horário</Text>
                 <View style={styles.timeInputContainer}>
                   {[9, 12, 15, 18, 21].map((hour) => (
                     <TouchableOpacity
                       key={hour}
                       style={[
                         styles.timeChip,
-                        reminderTime === formatTimeString(hour) &&
-                          styles.timeChipActive,
+                        { backgroundColor: colors.surfaceLight, borderColor: colors.border },
+                        reminderTime === formatTimeString(hour) && { backgroundColor: colors.primary, borderColor: colors.primary },
                       ]}
                       onPress={() => handleChangeReminderTime(formatTimeString(hour))}
                     >
                       <Text
                         style={[
                           styles.timeChipText,
-                          reminderTime === formatTimeString(hour) &&
-                            styles.timeChipTextActive,
+                          { color: colors.textSecondary },
+                          reminderTime === formatTimeString(hour) && { color: colors.text },
                         ]}
                       >
                         {formatTimeString(hour)}
@@ -276,24 +324,24 @@ export function SettingsScreen() {
 
       {/* Seção Dados */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>📊 Dados</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>📊 Dados</Text>
 
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <View style={styles.statRow}>
             <View>
-              <Text style={styles.statLabel}>Total de medições</Text>
-              <Text style={styles.statValue}>{readingCount}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total de medições</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>{readingCount}</Text>
             </View>
             <View>
-              <Text style={styles.statLabel}>Último acesso</Text>
-              <Text style={styles.statValue}>Hoje</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Último acesso</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>Hoje</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.buttonGroup}>
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, { backgroundColor: colors.primary }]}
             onPress={handleImportData}
             disabled={importing}
             activeOpacity={0.7}
@@ -301,51 +349,51 @@ export function SettingsScreen() {
             {importing ? (
               <ActivityIndicator size="small" color={colors.text} />
             ) : (
-              <Text style={styles.buttonText}>📥 Importar Dados</Text>
+              <Text style={[styles.buttonText, { color: colors.text }]}>📥 Importar Dados</Text>
             )}
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.button, styles.dangerButton]}
+            style={[styles.button, styles.dangerButton, { backgroundColor: colors.hypertension2 }]}
             onPress={handleClearData}
             activeOpacity={0.7}
           >
-            <Text style={styles.dangerButtonText}>🗑️ Limpar Tudo</Text>
+            <Text style={[styles.dangerButtonText, { color: colors.text }]}>🗑️ Limpar Tudo</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Seção Sobre */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>ℹ️ Sobre</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>ℹ️ Sobre</Text>
 
         <TouchableOpacity
-          style={styles.linkButton}
+          style={[styles.linkButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
           onPress={() => navigation.navigate('About')}
           activeOpacity={0.7}
         >
           <Text style={styles.linkButtonIcon}>📱</Text>
           <View style={styles.linkButtonContent}>
-            <Text style={styles.linkButtonTitle}>Sobre o dPressao</Text>
-            <Text style={styles.linkButtonSubtitle}>Versão 1.0.0 · Créditos e funcionalidades</Text>
+            <Text style={[styles.linkButtonTitle, { color: colors.text }]}>Sobre o dPressao</Text>
+            <Text style={[styles.linkButtonSubtitle, { color: colors.textMuted }]}>Versão 1.0.0 · Créditos e funcionalidades</Text>
           </View>
-          <Text style={styles.linkButtonArrow}>›</Text>
+          <Text style={[styles.linkButtonArrow, { color: colors.textMuted }]}>›</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.linkButton}
+          style={[styles.linkButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
           onPress={() => navigation.navigate('PrivacyPolicy')}
           activeOpacity={0.7}
         >
           <Text style={styles.linkButtonIcon}>🔒</Text>
           <View style={styles.linkButtonContent}>
-            <Text style={styles.linkButtonTitle}>Política de Privacidade</Text>
-            <Text style={styles.linkButtonSubtitle}>Como seus dados são protegidos</Text>
+            <Text style={[styles.linkButtonTitle, { color: colors.text }]}>Política de Privacidade</Text>
+            <Text style={[styles.linkButtonSubtitle, { color: colors.textMuted }]}>Como seus dados são protegidos</Text>
           </View>
-          <Text style={styles.linkButtonArrow}>›</Text>
+          <Text style={[styles.linkButtonArrow, { color: colors.textMuted }]}>›</Text>
         </TouchableOpacity>
 
-        <View style={styles.disclaimerCard}>
-          <Text style={styles.disclaimerText}>
+        <View style={[styles.disclaimerCard, { backgroundColor: colors.hypertension2Bg, borderLeftColor: colors.hypertension2 }]}>
+          <Text style={[styles.disclaimerText, { color: colors.textSecondary }]}>
             ⚕️ <Text style={{ fontWeight: '700', color: colors.hypertension2 }}>Aviso:</Text>{' '}
             Este aplicativo é apenas para monitoramento pessoal e não substitui consulta médica.
             Em caso de crise hipertensiva (≥180/120 mmHg), procure atendimento de emergência imediatamente.
@@ -359,7 +407,6 @@ export function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.md,
@@ -372,11 +419,9 @@ const styles = StyleSheet.create({
   title: {
     fontSize: fontSize.xxl,
     fontWeight: '800',
-    color: colors.text,
   },
   subtitle: {
     fontSize: fontSize.sm,
-    color: colors.textSecondary,
     marginTop: 2,
   },
   section: {
@@ -385,13 +430,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: fontSize.xs,
     fontWeight: '700',
-    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: spacing.xs,
   },
   card: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     gap: spacing.sm,
@@ -399,22 +442,17 @@ const styles = StyleSheet.create({
   label: {
     fontSize: fontSize.md,
     fontWeight: '600',
-    color: colors.text,
     marginBottom: spacing.xs,
   },
   input: {
-    backgroundColor: colors.surfaceLight,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    color: colors.text,
     fontSize: fontSize.md,
     borderWidth: 1,
-    borderColor: colors.border,
     marginBottom: spacing.sm,
   },
   button: {
-    backgroundColor: colors.primary,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
@@ -422,7 +460,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   buttonText: {
-    color: colors.text,
     fontWeight: '700',
     fontSize: fontSize.md,
   },
@@ -431,11 +468,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   dangerButton: {
-    backgroundColor: colors.hypertension2,
     flex: 1,
   },
   dangerButtonText: {
-    color: colors.text,
     fontWeight: '700',
     fontSize: fontSize.md,
   },
@@ -445,13 +480,11 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: fontSize.sm,
-    color: colors.textSecondary,
     fontWeight: '600',
   },
   statValue: {
     fontSize: fontSize.lg,
     fontWeight: '800',
-    color: colors.text,
     marginTop: spacing.xs,
   },
   aboutRow: {
@@ -461,35 +494,28 @@ const styles = StyleSheet.create({
   },
   aboutLabel: {
     fontSize: fontSize.md,
-    color: colors.textSecondary,
   },
   aboutValue: {
     fontSize: fontSize.md,
     fontWeight: '600',
-    color: colors.text,
   },
   disclaimerCard: {
-    backgroundColor: colors.hypertension2Bg,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     borderLeftWidth: 3,
-    borderLeftColor: colors.hypertension2,
   },
   disclaimerText: {
     fontSize: fontSize.sm,
-    color: colors.textSecondary,
     lineHeight: 20,
   },
   linkButton: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     alignItems: 'center',
     gap: spacing.md,
     marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   linkButtonIcon: {
     fontSize: fontSize.xl,
@@ -501,19 +527,15 @@ const styles = StyleSheet.create({
   linkButtonTitle: {
     fontSize: fontSize.sm,
     fontWeight: '700',
-    color: colors.text,
   },
   linkButtonSubtitle: {
     fontSize: fontSize.xs,
-    color: colors.textMuted,
   },
   linkButtonArrow: {
     fontSize: fontSize.lg,
-    color: colors.textMuted,
   },
   divider: {
     height: 1,
-    backgroundColor: colors.border,
     marginVertical: spacing.md,
   },
   reminderToggleRow: {
@@ -527,28 +549,18 @@ const styles = StyleSheet.create({
   },
   reminderToggleSubtitle: {
     fontSize: fontSize.xs,
-    color: colors.textMuted,
   },
   toggleSwitch: {
     width: 50,
     height: 28,
     borderRadius: 14,
-    backgroundColor: colors.border,
     padding: 2,
     justifyContent: 'center',
-  },
-  toggleSwitchActive: {
-    backgroundColor: colors.primary,
   },
   toggleCircle: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: colors.textMuted,
-  },
-  toggleCircleActive: {
-    backgroundColor: colors.text,
-    alignSelf: 'flex-end',
   },
   reminderTimeRow: {
     gap: spacing.md,
@@ -559,23 +571,30 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   timeChip: {
-    backgroundColor: colors.surfaceLight,
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.border,
-  },
-  timeChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
   },
   timeChipText: {
     fontSize: fontSize.sm,
     fontWeight: '600',
-    color: colors.textSecondary,
   },
-  timeChipTextActive: {
-    color: colors.text,
+  themeRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  themeChip: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+    borderWidth: 1.5,
+    alignItems: 'center',
+  },
+  themeChipText: {
+    fontSize: fontSize.sm,
+    fontWeight: '700',
   },
 });
