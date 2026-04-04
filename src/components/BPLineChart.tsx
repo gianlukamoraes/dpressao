@@ -29,14 +29,6 @@ export function BPLineChart({
   const { width } = useWindowDimensions();
   const chartWidth = width - spacing.lg * 4;
 
-  if (readings.length === 0) {
-    return (
-      <View style={[styles.container, styles.empty]}>
-        <Text style={styles.emptyText}>Sem dados para exibir</Text>
-      </View>
-    );
-  }
-
   // Chart: oldest → newest (left to right)
   const { systolicData, diastolicData, pulseData } = useMemo(() => {
     const sortedReadings = [...readings].reverse();
@@ -60,6 +52,14 @@ export function BPLineChart({
       pulseData: makeData((r) => r.pulse),
     };
   }, [readings]);
+
+  if (readings.length === 0) {
+    return (
+      <View style={[styles.container, styles.empty]}>
+        <Text style={styles.emptyText}>Sem dados para exibir</Text>
+      </View>
+    );
+  }
 
   const TRANSPARENT = 'transparent';
 
