@@ -86,7 +86,7 @@ export function TrendScreen() {
     }, [])
   );
 
-  const { filtered, previous, avgSys, avgDia, avgPul, minSys, maxSys, minDia, maxDia, distributions, insights, goal } = useMemo(() => {
+  const { filtered, avgSys, avgDia, avgPul, minSys, maxSys, minDia, maxDia, distributions, insights, goal } = useMemo(() => {
     const filtered = filterByPeriod(readings, period);
     const previous = getPreviousPeriod(readings, period);
 
@@ -111,7 +111,7 @@ export function TrendScreen() {
 
     const goal = profile?.bpGoal ?? null;
 
-    return { filtered, previous, avgSys, avgDia, avgPul, minSys, maxSys, minDia, maxDia, distributions, insights, goal };
+    return { filtered, avgSys, avgDia, avgPul, minSys, maxSys, minDia, maxDia, distributions, insights, goal };
   }, [readings, period, profile]);
 
   return (
