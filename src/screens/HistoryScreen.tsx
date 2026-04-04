@@ -13,9 +13,10 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
-import { BloodPressureReading } from '../types';
+import { BloodPressureReading, ExamEntry } from '../types';
 import { getReadings } from '../storage/readings';
 import { getSettings } from '../storage/settings';
+import { getProfile } from '../storage/user';
 import { classifyBP, formatDate } from '../utils/bloodPressure';
 import { ReadingCard } from '../components/ReadingCard';
 import { generatePDFReport } from '../utils/pdfReport';
@@ -58,17 +59,31 @@ export function HistoryScreen() {
         return;
       }
 
-      const settings = await getSettings();
-      const html = generatePDFReport(readings, { userName: settings.userName });
+      const [settings, profile] = await Promise.all([getSettings(), getProfile()]);
+
+      // Convert exam photos to base64 for embedding in PDF
+      if (profile.exams && profile.exams.length > 0) {
+        const examsWithBase64: ExamEntry[] = await Promise.all(
+          profile.exams.map(async (exam) => {
+            if (!exam.photoUri) return exam;
+            try {
+              const base64 = await FileSystem.readAsStringAsync(exam.photoUri, {
+                encoding: FileSystem.EncodingType.Base64,
+              });
+              return { ...exam, photoBase64: base64 };
+            } catch {
+              return exam;
+            }
+          })
+        );
+        profile.exams = examsWithBase64;
+      }
+
+      const html = generatePDFReport(readings, { userName: settings.userName, profile });
       const { uri } = await Print.printToFileAsync({ html });
 
-      // Copy to documents directory for sharing
-      const fileName = `dPressao_${new Date().getTime()}.pdf`;
-      const docPath = `${FileSystem.documentDirectory}${fileName}`;
-      await FileSystem.copyAsync({ from: uri, to: docPath });
-
       if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(docPath, {
+        await Sharing.shareAsync(uri, {
           mimeType: 'application/pdf',
           dialogTitle: 'Compartilhar Relatório PDF',
         });

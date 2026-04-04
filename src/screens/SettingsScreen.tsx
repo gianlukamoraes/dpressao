@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TextInput,
   TouchableOpacity,
   Alert,
   StatusBar,
@@ -29,7 +28,6 @@ import { colors, spacing, borderRadius, fontSize } from '../theme';
 export function SettingsScreen() {
   const navigation = useNavigation<any>();
   const [settings, setSettings] = useState<AppSettings | null>(null);
-  const [userName, setUserName] = useState('');
   const [readingCount, setReadingCount] = useState(0);
   const [importing, setImporting] = useState(false);
   const [reminderEnabled, setReminderEnabled] = useState(false);
@@ -44,17 +42,10 @@ export function SettingsScreen() {
   async function loadSettings() {
     const loaded = await getSettings();
     setSettings(loaded);
-    setUserName(loaded.userName);
     setReminderEnabled(loaded.reminderEnabled);
     setReminderTime(loaded.reminderTime);
     const readings = await getReadings();
     setReadingCount(readings.length);
-  }
-
-  async function handleSaveName() {
-    if (!settings) return;
-    await updateSettings({ ...settings, userName });
-    setSettings({ ...settings, userName });
   }
 
   async function handleClearData() {
@@ -206,23 +197,18 @@ export function SettingsScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>👤 Perfil</Text>
 
-        <View style={styles.card}>
-          <Text style={styles.label}>Seu nome</Text>
-          <TextInput
-            style={styles.input}
-            value={userName}
-            onChangeText={setUserName}
-            placeholder="Ex: Gianluka"
-            placeholderTextColor={colors.textMuted}
-          />
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleSaveName}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.buttonText}>Salvar Nome</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={styles.linkButton}
+          onPress={() => navigation.navigate('Profile')}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.linkButtonIcon}>🧑‍⚕️</Text>
+          <View style={styles.linkButtonContent}>
+            <Text style={styles.linkButtonTitle}>Perfil Clínico</Text>
+            <Text style={styles.linkButtonSubtitle}>Data de nascimento, medicamentos, exames e mais</Text>
+          </View>
+          <Text style={styles.linkButtonArrow}>›</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Seção Lembretes */}

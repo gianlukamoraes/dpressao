@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Linking,
   StatusBar,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -18,14 +17,6 @@ export function AboutScreen() {
     navigation.navigate('PrivacyPolicy');
   };
 
-  const handleOpenGitHub = async () => {
-    const url = 'https://github.com/dpressao';
-    try {
-      await Linking.openURL(url);
-    } catch (err) {
-      console.error('Failed to open GitHub:', err);
-    }
-  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -91,18 +82,6 @@ export function AboutScreen() {
           <Text style={styles.linkButtonArrow}>›</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.linkButton}
-          onPress={handleOpenGitHub}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.linkButtonIcon}>💻</Text>
-          <View style={styles.linkButtonContent}>
-            <Text style={styles.linkButtonTitle}>Código-Fonte (GitHub)</Text>
-            <Text style={styles.linkButtonSubtitle}>Transparência e open-source</Text>
-          </View>
-          <Text style={styles.linkButtonArrow}>›</Text>
-        </TouchableOpacity>
       </View>
 
       {/* Disclaimer */}
@@ -116,10 +95,7 @@ export function AboutScreen() {
       {/* Credits */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Créditos</Text>
-        <CreditItem label="Desenvolvido com" value="React Native + Expo" />
-        <CreditItem label="Padrões Médicos" value="AHA/ACC 2017" />
-        <CreditItem label="Ícones" value="Emojis Unicode" />
-        <CreditItem label="Armazenamento" value="AsyncStorage" />
+        <CreditItem label="Desenvolvedor" value="Gianluka Moraes" />
       </View>
 
       {/* License */}

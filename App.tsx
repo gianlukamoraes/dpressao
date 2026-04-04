@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Text, View, useColorScheme } from 'react-native';
+import { View, useColorScheme } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 
 import { HomeScreen } from './src/screens/HomeScreen';
@@ -11,6 +12,7 @@ import { NewReadingScreen } from './src/screens/NewReadingScreen';
 import { ReadingDetailScreen } from './src/screens/ReadingDetailScreen';
 import { TrendScreen } from './src/screens/TrendScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
+import { ProfileScreen } from './src/screens/ProfileScreen';
 import { DisclaimerScreen } from './src/screens/DisclaimerScreen';
 import { PrivacyPolicyScreen } from './src/screens/PrivacyPolicyScreen';
 import { AboutScreen } from './src/screens/AboutScreen';
@@ -22,20 +24,10 @@ import { ErrorBoundary } from './src/components/ErrorBoundary';
 const Tab = createBottomTabNavigator<TabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
-  return (
-    <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ fontSize: focused ? 22 : 20, opacity: focused ? 1 : 0.5 }}>
-        {emoji}
-      </Text>
-    </View>
-  );
-}
-
 function HomeTabs() {
   return (
     <Tab.Navigator
-      screenOptions={{
+      screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
           backgroundColor: colors.surface,
@@ -51,40 +43,28 @@ function HomeTabs() {
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
-      }}
+        tabBarIcon: ({ focused, color, size }) => {
+          const icons: Record<string, { active: string; inactive: string }> = {
+            Home:     { active: 'home',            inactive: 'home-outline' },
+            History:  { active: 'time',            inactive: 'time-outline' },
+            Trends:   { active: 'stats-chart',     inactive: 'stats-chart-outline' },
+            Settings: { active: 'settings',        inactive: 'settings-outline' },
+          };
+          const icon = icons[route.name] ?? { active: 'ellipse', inactive: 'ellipse-outline' };
+          return (
+            <Ionicons
+              name={(focused ? icon.active : icon.inactive) as any}
+              size={22}
+              color={color}
+            />
+          );
+        },
+      })}
     >
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{
-          title: 'Início',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="History"
-        component={HistoryScreen}
-        options={{
-          title: 'Histórico',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="📋" focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="Trends"
-        component={TrendScreen}
-        options={{
-          title: 'Tendências',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="📊" focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{
-          title: 'Ajustes',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="⚙️" focused={focused} />,
-        }}
-      />
+      <Tab.Screen name="Home"     component={HomeScreen}    options={{ title: 'Início' }} />
+      <Tab.Screen name="History"  component={HistoryScreen} options={{ title: 'Histórico' }} />
+      <Tab.Screen name="Trends"   component={TrendScreen}   options={{ title: 'Tendências' }} />
+      <Tab.Screen name="Settings" component={SettingsScreen} options={{ title: 'Ajustes' }} />
     </Tab.Navigator>
   );
 }
@@ -204,6 +184,14 @@ function AppContent() {
           component={ReadingDetailScreen}
           options={{
             title: 'Detalhe da Medição',
+            headerStyle: { backgroundColor: colors.background },
+          }}
+        />
+        <Stack.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{
+            title: 'Meu Perfil',
             headerStyle: { backgroundColor: colors.background },
           }}
         />

@@ -98,18 +98,29 @@ export function ReadingDetailScreen() {
         </View>
       </View>
 
+      {/* Sintomas */}
+      <View style={styles.noteCard}>
+        <Text style={styles.noteLabel}>🩺 Sintomas</Text>
+        {reading.symptoms && reading.symptoms.length > 0 ? (
+          <View style={styles.chipsRow}>
+            {reading.symptoms.map((symptom) => (
+              <View key={symptom} style={styles.chip}>
+                <Text style={styles.chipText}>{symptom}</Text>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <Text style={styles.noteEmpty}>Nenhum sintoma registrado.</Text>
+        )}
+      </View>
+
       {/* Nota */}
       {reading.note ? (
         <View style={styles.noteCard}>
           <Text style={styles.noteLabel}>💬 Observação</Text>
           <Text style={styles.noteText}>{reading.note}</Text>
         </View>
-      ) : (
-        <View style={styles.noteCard}>
-          <Text style={styles.noteLabel}>💬 Observação</Text>
-          <Text style={styles.noteEmpty}>Nenhuma observação registrada.</Text>
-        </View>
-      )}
+      ) : null}
 
       {/* Referência */}
       <View style={styles.referenceCard}>
@@ -264,6 +275,25 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     color: colors.textMuted,
     fontStyle: 'italic',
+  },
+  chipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  chip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surfaceLight,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  chipText: {
+    fontSize: fontSize.sm,
+    color: colors.text,
+    fontWeight: '600',
   },
   referenceCard: {
     backgroundColor: colors.surface,

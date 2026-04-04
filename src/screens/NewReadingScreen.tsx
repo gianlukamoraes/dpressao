@@ -16,6 +16,7 @@ import { saveReading, updateReading, getReadings } from '../storage/readings';
 import { BloodPressureReading } from '../types';
 import { classifyBP } from '../utils/bloodPressure';
 import { BPBadge } from '../components/BPBadge';
+import { SYMPTOMS, SYMPTOMS_INITIAL_VISIBLE } from '../utils/symptoms';
 import { colors, spacing, borderRadius, fontSize } from '../theme';
 import { RootStackParamList } from '../types/navigation';
 
@@ -28,6 +29,8 @@ export function NewReadingScreen() {
   const [diastolic, setDiastolic] = useState('');
   const [pulse, setPulse] = useState('');
   const [note, setNote] = useState('');
+  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
+  const [showAllSymptoms, setShowAllSymptoms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -46,10 +49,19 @@ export function NewReadingScreen() {
       setDiastolic(reading.diastolic.toString());
       setPulse(reading.pulse.toString());
       setNote(reading.note || '');
+      setSelectedSymptoms(reading.symptoms ?? []);
       setIsEditing(true);
       setEditingId(id);
     }
   }
+
+  function toggleSymptom(symptom: string) {
+    setSelectedSymptoms((prev) =>
+      prev.includes(symptom) ? prev.filter((s) => s !== symptom) : [...prev, symptom]
+    );
+  }
+
+  const visibleSymptoms = showAllSymptoms ? SYMPTOMS : SYMPTOMS.slice(0, SYMPTOMS_INITIAL_VISIBLE);
 
   const isValid =
     systolic.trim() !== '' &&
@@ -90,21 +102,21 @@ export function NewReadingScreen() {
     setLoading(true);
     try {
       if (isEditing && editingId) {
-        // Update existing reading
         await updateReading(editingId, {
           systolic: sys,
           diastolic: dia,
           pulse: pul,
           note: note.trim() || undefined,
+          symptoms: selectedSymptoms.length > 0 ? selectedSymptoms : undefined,
         });
       } else {
-        // Create new reading
         await saveReading({
           systolic: sys,
           diastolic: dia,
           pulse: pul,
           date: new Date().toISOString(),
           note: note.trim() || undefined,
+          symptoms: selectedSymptoms.length > 0 ? selectedSymptoms : undefined,
         });
       }
       navigation.goBack();
@@ -204,9 +216,40 @@ export function NewReadingScreen() {
           </View>
         </View>
 
+        {/* Sintomas */}
+        <View style={styles.symptomsContainer}>
+          <Text style={styles.fieldLabel}>🩺 Como você está se sentindo?</Text>
+          <View style={styles.chipsRow}>
+            {visibleSymptoms.map((symptom) => {
+              const selected = selectedSymptoms.includes(symptom);
+              return (
+                <TouchableOpacity
+                  key={symptom}
+                  style={[styles.chip, selected && styles.chipSelected]}
+                  onPress={() => toggleSymptom(symptom)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+                    {symptom}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+            {!showAllSymptoms && (
+              <TouchableOpacity
+                style={styles.chipMore}
+                onPress={() => setShowAllSymptoms(true)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.chipMoreText}>Ver mais...</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
         {/* Observação */}
         <View style={styles.noteContainer}>
-          <Text style={styles.fieldLabel}>💬 Observação (opcional)</Text>
+          <Text style={styles.fieldLabel}>💬 Sintoma não listado / Observação (opcional)</Text>
           <TextInput
             style={styles.noteInput}
             value={note}
@@ -348,6 +391,50 @@ const styles = StyleSheet.create({
   pulseUnit: {
     fontSize: fontSize.md,
     color: colors.textSecondary,
+  },
+  symptomsContainer: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  chipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  chip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.background,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  chipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  chipText: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
+  chipTextSelected: {
+    color: colors.text,
+    fontWeight: '700',
+  },
+  chipMore: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+  },
+  chipMoreText: {
+    fontSize: fontSize.sm,
+    color: colors.primary,
+    fontWeight: '700',
   },
   noteContainer: {
     backgroundColor: colors.surface,

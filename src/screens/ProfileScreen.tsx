@@ -12,9 +12,10 @@ import {
   Platform,
   StatusBar,
   ActivityIndicator,
+  Image,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
-import { BiologicalSex, UserProfile } from '../types';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { BiologicalSex, ExamEntry, UserProfile } from '../types';
 import { getProfile, saveProfile } from '../storage/user';
 import { colors, spacing, borderRadius, fontSize } from '../theme';
 
@@ -31,7 +32,7 @@ function isoToBR(iso: string): string {
   return `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`;
 }
 
-function maskBirthDate(raw: string): string {
+function maskDate(raw: string): string {
   const digits = raw.replace(/\D/g, '').slice(0, 8);
   if (digits.length <= 2) return digits;
   if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
@@ -47,7 +48,32 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+async function pickImage(): Promise<string | null> {
+  try {
+    // Dynamic import to avoid crashing if expo-image-picker is not installed
+    const ImagePicker = await import('expo-image-picker');
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permissão negada', 'Precisamos acessar sua galeria para anexar a foto do exame.');
+      return null;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+      allowsEditing: false,
+    });
+    if (!result.canceled && result.assets.length > 0) {
+      return result.assets[0].uri;
+    }
+    return null;
+  } catch {
+    Alert.alert('Não disponível', 'Para anexar fotos instale o módulo expo-image-picker:\nnpx expo install expo-image-picker');
+    return null;
+  }
+}
+
 export function ProfileScreen() {
+  const navigation = useNavigation<any>();
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [biologicalSex, setBiologicalSex] = useState<BiologicalSex | undefined>(undefined);
@@ -59,9 +85,15 @@ export function ProfileScreen() {
   const [isDiabetic, setIsDiabetic] = useState(false);
   const [isSmoker, setIsSmoker] = useState(false);
   const [doctorName, setDoctorName] = useState('');
+  const [exams, setExams] = useState<ExamEntry[]>([]);
   const [saving, setSaving] = useState(false);
-  const [savedFeedback, setSavedFeedback] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Inline form for new exam
+  const [showExamForm, setShowExamForm] = useState(false);
+  const [newExamDate, setNewExamDate] = useState('');
+  const [newExamDescription, setNewExamDescription] = useState('');
+  const [newExamPhotoUri, setNewExamPhotoUri] = useState<string | undefined>(undefined);
 
   useFocusEffect(
     useCallback(() => {
@@ -79,6 +111,7 @@ export function ProfileScreen() {
         setIsDiabetic(p.isDiabetic);
         setIsSmoker(p.isSmoker);
         setDoctorName(p.doctorName ?? '');
+        setExams(p.exams ?? []);
         setLoading(false);
       }
       load();
@@ -102,16 +135,51 @@ export function ProfileScreen() {
       isDiabetic,
       isSmoker,
       doctorName: doctorName.trim() || undefined,
+      exams: exams.length > 0 ? exams : undefined,
     };
     try {
       await saveProfile(profile);
-      setSavedFeedback(true);
-      setTimeout(() => setSavedFeedback(false), 2500);
+      navigation.goBack();
     } catch {
       Alert.alert('Erro', 'Não foi possível salvar o perfil. Tente novamente.');
     } finally {
       setSaving(false);
     }
+  }
+
+  function handleAddExam() {
+    if (!newExamDescription.trim()) {
+      Alert.alert('Campo obrigatório', 'Preencha a descrição do exame.');
+      return;
+    }
+    const isoDate = newExamDate.length === 10 ? brToISO(newExamDate) : new Date().toISOString();
+    const entry: ExamEntry = {
+      id: Date.now().toString(),
+      date: isoDate ?? new Date().toISOString(),
+      description: newExamDescription.trim(),
+      photoUri: newExamPhotoUri,
+    };
+    setExams((prev) => [entry, ...prev]);
+    setNewExamDate('');
+    setNewExamDescription('');
+    setNewExamPhotoUri(undefined);
+    setShowExamForm(false);
+  }
+
+  function handleRemoveExam(id: string) {
+    Alert.alert('Remover exame', 'Deseja remover este resultado de exame?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Remover',
+        style: 'destructive',
+        onPress: () => setExams((prev) => prev.filter((e) => e.id !== id)),
+      },
+    ]);
+  }
+
+  async function handlePickPhoto() {
+    const uri = await pickImage();
+    if (uri) setNewExamPhotoUri(uri);
   }
 
   const SEX_OPTIONS: { key: BiologicalSex; label: string }[] = [
@@ -161,7 +229,7 @@ export function ProfileScreen() {
             <TextInput
               style={styles.textInput}
               value={birthDate}
-              onChangeText={(text) => setBirthDate(maskBirthDate(text))}
+              onChangeText={(text) => setBirthDate(maskDate(text))}
               placeholder="DD/MM/AAAA"
               placeholderTextColor={colors.textMuted}
               keyboardType="numeric"
@@ -299,6 +367,86 @@ export function ProfileScreen() {
           </View>
         </Section>
 
+        {/* Resultados de Exames */}
+        <Section title="Resultados de Exames">
+          {exams.length === 0 && !showExamForm && (
+            <Text style={styles.emptyExams}>Nenhum resultado cadastrado.</Text>
+          )}
+
+          {exams.map((exam) => (
+            <View key={exam.id} style={styles.examCard}>
+              <View style={styles.examCardHeader}>
+                <Text style={styles.examDate}>{isoToBR(exam.date)}</Text>
+                <TouchableOpacity onPress={() => handleRemoveExam(exam.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <Text style={styles.examRemove}>🗑️</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.examDescription} numberOfLines={3}>{exam.description}</Text>
+              {exam.photoUri && (
+                <Image source={{ uri: exam.photoUri }} style={styles.examThumb} resizeMode="cover" />
+              )}
+            </View>
+          ))}
+
+          {showExamForm && (
+            <View style={styles.examForm}>
+              <Text style={styles.fieldLabel}>Data do exame</Text>
+              <TextInput
+                style={styles.textInput}
+                value={newExamDate}
+                onChangeText={(t) => setNewExamDate(maskDate(t))}
+                placeholder="DD/MM/AAAA"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="numeric"
+                maxLength={10}
+              />
+              <Text style={[styles.fieldLabel, { marginTop: spacing.sm }]}>Descrição / Resultado</Text>
+              <TextInput
+                style={[styles.textInput, styles.textInputMultiline]}
+                value={newExamDescription}
+                onChangeText={setNewExamDescription}
+                placeholder="Ex: Colesterol LDL: 140 mg/dL&#10;Glicemia em jejum: 98 mg/dL"
+                placeholderTextColor={colors.textMuted}
+                multiline
+                numberOfLines={4}
+                maxLength={500}
+                textAlignVertical="top"
+              />
+              <TouchableOpacity style={styles.photoButton} onPress={handlePickPhoto} activeOpacity={0.8}>
+                <Text style={styles.photoButtonText}>
+                  {newExamPhotoUri ? '✅ Foto anexada — trocar' : '📷 Anexar foto do resultado'}
+                </Text>
+              </TouchableOpacity>
+              {newExamPhotoUri && (
+                <Image source={{ uri: newExamPhotoUri }} style={styles.examThumbPreview} resizeMode="cover" />
+              )}
+              <View style={styles.examFormActions}>
+                <TouchableOpacity
+                  style={styles.examFormCancel}
+                  onPress={() => {
+                    setShowExamForm(false);
+                    setNewExamDate('');
+                    setNewExamDescription('');
+                    setNewExamPhotoUri(undefined);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.examFormCancelText}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.examFormConfirm} onPress={handleAddExam} activeOpacity={0.8}>
+                  <Text style={styles.examFormConfirmText}>Confirmar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {!showExamForm && (
+            <TouchableOpacity style={styles.addExamButton} onPress={() => setShowExamForm(true)} activeOpacity={0.8}>
+              <Text style={styles.addExamButtonText}>➕ Adicionar Resultado</Text>
+            </TouchableOpacity>
+          )}
+        </Section>
+
         {/* Botão salvar */}
         <TouchableOpacity
           style={[styles.saveButton, saving && styles.saveButtonDisabled]}
@@ -310,12 +458,6 @@ export function ProfileScreen() {
             {saving ? 'Salvando...' : '💾 Salvar Perfil'}
           </Text>
         </TouchableOpacity>
-
-        {savedFeedback && (
-          <View style={styles.successBanner}>
-            <Text style={styles.successText}>✅ Perfil salvo com sucesso!</Text>
-          </View>
-        )}
 
       </ScrollView>
     </KeyboardAvoidingView>
@@ -385,7 +527,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   textInputMultiline: {
-    minHeight: 72,
+    minHeight: 80,
     borderBottomWidth: 0,
     borderWidth: 1,
     borderColor: colors.border,
@@ -456,6 +598,115 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.textMuted,
     marginBottom: spacing.sm,
+  },
+  emptyExams: {
+    fontSize: fontSize.sm,
+    color: colors.textMuted,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    paddingVertical: spacing.sm,
+  },
+  examCard: {
+    backgroundColor: colors.background,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+    gap: spacing.xs,
+  },
+  examCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  examDate: {
+    fontSize: fontSize.sm,
+    color: colors.primary,
+    fontWeight: '700',
+  },
+  examRemove: {
+    fontSize: fontSize.md,
+  },
+  examDescription: {
+    fontSize: fontSize.sm,
+    color: colors.text,
+    lineHeight: 20,
+  },
+  examThumb: {
+    width: '100%',
+    height: 120,
+    borderRadius: borderRadius.sm,
+    marginTop: spacing.xs,
+  },
+  examForm: {
+    backgroundColor: colors.background,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    padding: spacing.md,
+    gap: spacing.xs,
+  },
+  examThumbPreview: {
+    width: '100%',
+    height: 160,
+    borderRadius: borderRadius.sm,
+    marginTop: spacing.sm,
+  },
+  photoButton: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    padding: spacing.sm,
+    alignItems: 'center',
+    marginTop: spacing.sm,
+  },
+  photoButtonText: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
+  examFormActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  examFormCancel: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    padding: spacing.sm,
+    alignItems: 'center',
+  },
+  examFormCancelText: {
+    fontSize: fontSize.sm,
+    color: colors.textMuted,
+    fontWeight: '600',
+  },
+  examFormConfirm: {
+    flex: 2,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.md,
+    padding: spacing.sm,
+    alignItems: 'center',
+  },
+  examFormConfirmText: {
+    fontSize: fontSize.sm,
+    color: colors.text,
+    fontWeight: '700',
+  },
+  addExamButton: {
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    borderRadius: borderRadius.md,
+    padding: spacing.sm,
+    alignItems: 'center',
+    borderStyle: 'dashed',
+  },
+  addExamButtonText: {
+    fontSize: fontSize.sm,
+    color: colors.primary,
+    fontWeight: '700',
   },
   saveButton: {
     backgroundColor: colors.primary,

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -49,6 +49,12 @@ export function HomeScreen() {
     }, [loadReadings])
   );
 
+  // Garante refresh ao voltar de modal (iOS não dispara useFocusEffect em alguns casos)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', loadReadings);
+    return unsubscribe;
+  }, [navigation, loadReadings]);
+
   async function handleRefresh() {
     setRefreshing(true);
     await loadReadings();
@@ -59,7 +65,7 @@ export function HomeScreen() {
   const latestClassification = latest
     ? classifyBP(latest.systolic, latest.diastolic)
     : null;
-  const recentReadings = readings.slice(1, 4);
+  const recentReadings = readings.slice(0, 3);
 
   return (
     <ScrollView
@@ -79,12 +85,9 @@ export function HomeScreen() {
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>
-            Olá{settings?.userName ? ', ' + settings.userName : ''} 👋
+            Olá{settings?.userName ? ', ' + settings.userName : ''}
           </Text>
           <Text style={styles.subtitle}>Monitoramento de pressão arterial</Text>
-        </View>
-        <View style={styles.heartIcon}>
-          <Text style={{ fontSize: 28 }}>🫀</Text>
         </View>
       </View>
 
@@ -234,17 +237,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     fontWeight: '400',
   },
-  heartIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.surface,
-    borderWidth: 2,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
   // ── Latest card ────────────────────────────────────────────────
   latestCard: {
     borderRadius: borderRadius.md,
