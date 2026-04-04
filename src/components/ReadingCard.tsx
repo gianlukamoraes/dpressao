@@ -49,7 +49,12 @@ export function ReadingCard({ reading, onDelete, onPress }: Props) {
       activeOpacity={0.8}
     >
       <View style={styles.left}>
-        <Text style={styles.bpValue}>
+        <Text
+          style={styles.bpValue}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+        >
           {reading.systolic}
           <Text style={styles.bpSeparator}>/</Text>
           {reading.diastolic}
@@ -81,22 +86,32 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: colors.border,
-    padding: spacing.lg,
+    borderLeftWidth: 5,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
   left: {
     flex: 1,
-    gap: spacing.sm,
+    gap: spacing.xs,
+    paddingVertical: spacing.md,
+    paddingLeft: spacing.md,
   },
   right: {
     alignItems: 'flex-end',
-    gap: spacing.sm,
-    marginLeft: spacing.lg,
+    gap: 4,
+    paddingVertical: spacing.md,
+    paddingRight: spacing.md,
+    paddingLeft: spacing.sm,
   },
   bpValue: {
     fontSize: fontSize.xxxl,
@@ -131,21 +146,22 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   time: {
-    fontSize: fontSize.xxl,
+    fontSize: fontSize.xl2,
     color: colors.text,
     fontWeight: '900',
+    lineHeight: 28,
   },
   pulseRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    marginTop: spacing.xs,
+    marginTop: 2,
   },
   pulseIcon: {
-    fontSize: fontSize.lg,
+    fontSize: fontSize.md,
   },
   pulse: {
-    fontSize: fontSize.sm,
+    fontSize: fontSize.xs,
     color: colors.textSecondary,
     fontWeight: '700',
   },
