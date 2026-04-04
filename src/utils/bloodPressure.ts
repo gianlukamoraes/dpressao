@@ -2,7 +2,8 @@ import { BPCategory, BPClassification } from '../types';
 import { colors } from '../theme';
 
 export function classifyBP(systolic: number, diastolic: number): BPClassification {
-  if (systolic > 180 || diastolic > 120) {
+  // Crise Hipertensiva — SBC 2020: ≥ 180 sistólica OU ≥ 110 diastólica
+  if (systolic >= 180 || diastolic >= 110) {
     return {
       category: 'crisis',
       label: 'Crise Hipertensiva',
@@ -12,7 +13,8 @@ export function classifyBP(systolic: number, diastolic: number): BPClassificatio
       description: 'Procure atendimento médico imediatamente!',
     };
   }
-  if (systolic >= 140 || diastolic >= 90) {
+  // Hipertensão Estágio 2 — SBC 2020: 160–179 OU 100–109
+  if (systolic >= 160 || diastolic >= 100) {
     return {
       category: 'hypertension2',
       label: 'Hipertensão Estágio 2',
@@ -22,7 +24,8 @@ export function classifyBP(systolic: number, diastolic: number): BPClassificatio
       description: 'Consulte seu médico em breve.',
     };
   }
-  if ((systolic >= 130 && systolic <= 139) || (diastolic >= 80 && diastolic <= 89)) {
+  // Hipertensão Estágio 1 — SBC 2020: 140–159 OU 90–99
+  if (systolic >= 140 || diastolic >= 90) {
     return {
       category: 'hypertension1',
       label: 'Hipertensão Estágio 1',
@@ -32,7 +35,8 @@ export function classifyBP(systolic: number, diastolic: number): BPClassificatio
       description: 'Atenção: monitore com frequência.',
     };
   }
-  if (systolic >= 120 && systolic <= 129 && diastolic < 80) {
+  // Limítrofe — SBC 2020: 130–139 OU 85–89
+  if (systolic >= 130 || diastolic >= 85) {
     return {
       category: 'elevated',
       label: 'Pressão Elevada',
@@ -42,6 +46,7 @@ export function classifyBP(systolic: number, diastolic: number): BPClassificatio
       description: 'Acima do ideal. Fique atento.',
     };
   }
+  // Ótima e Normal — SBC 2020: < 130 E < 85 (inclui 120/80)
   return {
     category: 'normal',
     label: 'Normal',
