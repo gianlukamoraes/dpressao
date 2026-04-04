@@ -1,24 +1,27 @@
 # dPressão Design System
 
-## 🎨 Aesthetic Direction: "Honest Data"
+## 🎨 Aesthetic Direction: "Azul Ardósia + Verde Saúde"
 
-**Brutalist Medical + Warmth**
-
-Um design que combina o rigor médico com acessibilidade emocional. Números ousados, borders sólidos, muito espaço em branco. Confiável, moderno, memorável.
+Fundo azul-ardósia suave, bordas cinza discretas, ação principal em verde saúde. Números ousados, muito espaço, confiável e acolhedor.
 
 ---
 
 ## Color Palette
 
 ### Backgrounds
-- **Primary Background:** `#FAFAF8` (Off-white, não pure white)
-- **Surface (Cards):** `#FFFFFF` (Pure white)
-- **Surface Light:** `#F5F5F3` (Subtle gray for layering)
+- **Primary Background:** `#EEF2F7` (Azul Ardósia)
+- **Surface (Cards):** `#F8FAFC` (Quase branco)
+- **Surface Light:** `#F1F5F9` (Cinza azulado sutil)
 
 ### Text Hierarchy
-- **Text (Primary):** `#1A1A1A` (Near-black)
-- **Text Secondary:** `#5A5A5A` (Medium gray)
-- **Text Muted:** `#888888` (Light gray)
+- **Text (Primary):** `#0F172A` (Azul quase-preto)
+- **Text Secondary:** `#64748B` (Slate médio)
+- **Text Muted:** `#94A3B8` (Slate claro)
+
+### Ações
+- **Primary Action:** `#16A34A` (Verde Saúde — CTAs positivos)
+- **Danger Action:** `#DC3545` (Vermelho — exclusivamente destrutivo: excluir, cancelar)
+- **Border:** `#E2E8F0` (Cinza suave — substituiu preto #000000)
 
 ### Medical Status Colors
 - **Normal:** `#22C55E` (Bright green)
@@ -27,10 +30,17 @@ Um design que combina o rigor médico com acessibilidade emocional. Números ous
 - **Hypertension 2:** `#EF4444` (Red)
 - **Crisis:** `#A855F7` (Purple)
 
-### Accent & Utility
-- **Primary Action:** `#DC3545` (Warm medical red)
-- **Gold Accent:** `#C9A961` (For important highlights)
-- **Border:** `#000000` (Black solid borders)
+### Design Tokens
+```typescript
+primary: '#16A34A'        // Verde Saúde — ações CTA
+danger: '#DC3545'         // Vermelho — ações destrutivas
+text: '#0F172A'           // Azul quase-preto
+textSecondary: '#64748B'  // Slate
+textMuted: '#94A3B8'      // Slate claro
+border: '#E2E8F0'         // Bordas suaves
+background: '#EEF2F7'     // Azul Ardósia
+surface: '#F8FAFC'        // Cards
+```
 
 ---
 
@@ -74,10 +84,10 @@ xxl: 48px  (huge gaps)
 **Gap between sections:** `lg` (24px)
 
 ### Borders & Radius
-- **Border width:** 2px (main), 2.5px (large components)
-- **Border color:** Black (#000000) for all borders
-- **Border radius:** 2-4px (brutalist/square feel, not rounded)
-- **Large components:** 8px radius
+- **Border width:** 1.5px (main), 2px (status cards)
+- **Border color:** `#E2E8F0` (cinza suave) — status cards mantêm cor do status
+- **Border radius:** 6-8px (sm/md), 12-16px (lg/xl), 999 (full pill)
+- **Sombra suave:** `shadowOpacity: 0.04–0.08` em todos os cards
 
 ---
 
@@ -85,26 +95,27 @@ xxl: 48px  (huge gaps)
 
 ### Cards
 ```
-- Background: #FFFFFF (surface)
-- Border: 2px solid #000000
-- Border radius: 4-8px
+- Background: #F8FAFC (surface)
+- Border: 1.5px solid #E2E8F0
+- Border radius: 8px (md)
 - Padding: 24px (lg)
-- Shadow: None (flat aesthetic)
+- Shadow: shadowOpacity 0.04–0.08, radius 3–8
 ```
 
 ### Buttons
 ```
-- Primary (Action): #DC3545 background + black border (2px)
-- Secondary: #FFFFFF surface + black border (2px)
-- Border radius: 4-8px
+- Primary (Action): #16A34A background, sem border, sombra verde
+- Danger (Destrutivo): #DC3545 background
+- Secondary: #F8FAFC surface + #E2E8F0 border (1.5px)
+- Border radius: 8px (md)
 - Padding: 24px horizontal, 16px vertical (lg)
 ```
 
 ### Badges
 ```
-- Border: 2px solid (color from classification)
+- Border: 1.5px solid (color from classification)
 - Background: Subtle color (light tint)
-- Border radius: 8px
+- Border radius: 999 (pill)
 - Padding: 16px horizontal, 8px vertical
 ```
 
@@ -124,11 +135,11 @@ Numbers and titles are LARGE and heavy (weight 900). This creates visual hierarc
 ✓ Do: 64px, weight 900 for BP values
 ✗ Don't: 28px, weight 600 (too small and light)
 
-### 2. **Black Borders**
-All cards and inputs use solid black borders (2px). This is the signature of the aesthetic.
+### 2. **Bordas Suaves**
+Cards usam `1.5px solid #E2E8F0` com sombra suave. Cards de status mantêm borda colorida `2px` na cor da classificação.
 
-✓ Do: All cards have `borderWidth: 2, borderColor: '#000000'`
-✗ Don't: Colored borders, subtle grays, shadow-only
+✓ Do: `borderWidth: 1.5, borderColor: '#E2E8F0', elevation: 1`
+✗ Don't: `borderWidth: 2, borderColor: '#000000'`
 
 ### 3. **Generous Whitespace**
 Spacing between elements is generous. This creates breathing room and emphasizes each element.
@@ -142,11 +153,11 @@ The medical colors (green/amber/orange/red/purple) are vibrant and immediate. Th
 ✓ Do: Use exact status colors #22C55E, #FBBF24, etc.
 ✗ Don't: Mute or desaturate these colors
 
-### 5. **Flat Design**
-No shadows (except subtle overlay). Borders define relationships, not depth.
+### 5. **Profundidade Sutil**
+Sombras suaves criam hierarquia sem peso visual. Cards flutuam levemente.
 
-✓ Do: Borders and spacing define hierarchy
-✗ Don't: Drop shadows, gradients, layering effects
+✓ Do: `shadowOpacity: 0.05, shadowRadius: 3, elevation: 1`
+✗ Don't: Sombras pesadas ou ausência total de profundidade
 
 ---
 
