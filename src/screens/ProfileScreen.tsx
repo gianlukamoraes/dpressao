@@ -17,7 +17,9 @@ import {
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { BiologicalSex, ExamEntry, UserProfile } from '../types';
 import { getProfile, saveProfile } from '../storage/user';
-import { colors, spacing, borderRadius, fontSize } from '../theme';
+import { GlassBackground } from '../components/GlassBackground';
+import { useTheme } from '../contexts/ThemeContext';
+import { spacing, borderRadius, fontSize } from '../theme';
 
 function brToISO(br: string): string | undefined {
   const [day, month, year] = br.split('/');
@@ -37,15 +39,6 @@ function maskDate(raw: string): string {
   if (digits.length <= 2) return digits;
   if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
   return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <View style={styles.sectionCard}>{children}</View>
-    </View>
-  );
 }
 
 async function pickImage(): Promise<string | null> {
@@ -74,6 +67,7 @@ async function pickImage(): Promise<string | null> {
 
 export function ProfileScreen() {
   const navigation = useNavigation<any>();
+  const { colors } = useTheme();
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [biologicalSex, setBiologicalSex] = useState<BiologicalSex | undefined>(undefined);
@@ -188,290 +182,306 @@ export function ProfileScreen() {
     { key: 'other', label: 'Outro' },
   ];
 
-  if (loading) {
+  function Section({ title, children }: { title: string; children: React.ReactNode }) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{title}</Text>
+        <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>{children}</View>
       </View>
     );
   }
 
-  return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-
-        <View style={styles.header}>
-          <Text style={styles.title}>👤 Meu Perfil</Text>
-          <Text style={styles.subtitle}>Informações pessoais de saúde</Text>
+  if (loading) {
+    return (
+      <GlassBackground>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
+      </GlassBackground>
+    );
+  }
 
-        {/* Dados pessoais */}
-        <Section title="Dados Pessoais">
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Nome</Text>
-            <TextInput
-              style={styles.textInput}
-              value={name}
-              onChangeText={setName}
-              placeholder="Seu nome"
-              placeholderTextColor={colors.textMuted}
-              autoCapitalize="words"
-              returnKeyType="next"
-            />
+  return (
+    <GlassBackground>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+
+          <View style={styles.header}>
+            <Text style={[styles.title, { color: colors.text }]}>👤 Meu Perfil</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Informações pessoais de saúde</Text>
           </View>
 
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Data de nascimento</Text>
-            <TextInput
-              style={styles.textInput}
-              value={birthDate}
-              onChangeText={(text) => setBirthDate(maskDate(text))}
-              placeholder="DD/MM/AAAA"
-              placeholderTextColor={colors.textMuted}
-              keyboardType="numeric"
-              maxLength={10}
-              returnKeyType="next"
-            />
-          </View>
-
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Sexo biológico</Text>
-            <View style={styles.chipsRow}>
-              {SEX_OPTIONS.map((opt) => (
-                <TouchableOpacity
-                  key={opt.key}
-                  style={[styles.chip, biologicalSex === opt.key && styles.chipActive]}
-                  onPress={() => setBiologicalSex(biologicalSex === opt.key ? undefined : opt.key)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[styles.chipText, biologicalSex === opt.key && styles.chipTextActive]}>
-                    {opt.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        </Section>
-
-        {/* Medicamentos */}
-        <Section title="Medicamentos">
-          <View style={styles.switchRow}>
-            <Text style={styles.fieldLabel}>Uso anti-hipertensivos ou outros medicamentos</Text>
-            <Switch
-              value={usesMedication}
-              onValueChange={setUsesMedication}
-              trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={colors.text}
-            />
-          </View>
-          {usesMedication && (
+          {/* Dados pessoais */}
+          <Section title="Dados Pessoais">
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Quais medicamentos?</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Nome</Text>
               <TextInput
-                style={[styles.textInput, styles.textInputMultiline]}
-                value={medicationDescription}
-                onChangeText={setMedicationDescription}
-                placeholder="Ex: Losartana 50mg, Anlodipino 5mg..."
+                style={[styles.textInput, { color: colors.text, borderBottomColor: colors.border }]}
+                value={name}
+                onChangeText={setName}
+                placeholder="Seu nome"
                 placeholderTextColor={colors.textMuted}
-                multiline
-                numberOfLines={3}
-                maxLength={300}
-                textAlignVertical="top"
+                autoCapitalize="words"
+                returnKeyType="next"
               />
             </View>
-          )}
-        </Section>
 
-        {/* Meta de pressão */}
-        <Section title="Meta de Pressão">
-          <View style={styles.switchRow}>
-            <Text style={styles.fieldLabel}>Definir meta de pressão (definida pelo médico)</Text>
-            <Switch
-              value={hasGoal}
-              onValueChange={setHasGoal}
-              trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={colors.text}
-            />
-          </View>
-          {hasGoal && (
-            <View style={styles.goalRow}>
-              <View style={styles.goalField}>
-                <Text style={styles.fieldLabel}>Sistólica</Text>
-                <TextInput
-                  style={styles.goalInput}
-                  value={goalSystolic}
-                  onChangeText={setGoalSystolic}
-                  placeholder="120"
-                  placeholderTextColor={colors.textMuted}
-                  keyboardType="numeric"
-                  maxLength={3}
-                />
-              </View>
-              <Text style={styles.goalSeparator}>/</Text>
-              <View style={styles.goalField}>
-                <Text style={styles.fieldLabel}>Diastólica</Text>
-                <TextInput
-                  style={styles.goalInput}
-                  value={goalDiastolic}
-                  onChangeText={setGoalDiastolic}
-                  placeholder="80"
-                  placeholderTextColor={colors.textMuted}
-                  keyboardType="numeric"
-                  maxLength={3}
-                />
-              </View>
-              <Text style={styles.goalUnit}>mmHg</Text>
-            </View>
-          )}
-        </Section>
-
-        {/* Fatores de risco */}
-        <Section title="Fatores de Risco Cardiovascular">
-          <View style={styles.switchRow}>
-            <Text style={styles.fieldLabel}>Sou diabético(a)</Text>
-            <Switch
-              value={isDiabetic}
-              onValueChange={setIsDiabetic}
-              trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={colors.text}
-            />
-          </View>
-          <View style={styles.switchRow}>
-            <Text style={styles.fieldLabel}>Sou fumante</Text>
-            <Switch
-              value={isSmoker}
-              onValueChange={setIsSmoker}
-              trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={colors.text}
-            />
-          </View>
-        </Section>
-
-        {/* Médico */}
-        <Section title="Médico Responsável">
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Nome do médico (opcional)</Text>
-            <TextInput
-              style={styles.textInput}
-              value={doctorName}
-              onChangeText={setDoctorName}
-              placeholder="Dr. ..."
-              placeholderTextColor={colors.textMuted}
-              autoCapitalize="words"
-              returnKeyType="done"
-            />
-          </View>
-        </Section>
-
-        {/* Resultados de Exames */}
-        <Section title="Resultados de Exames">
-          {exams.length === 0 && !showExamForm && (
-            <Text style={styles.emptyExams}>Nenhum resultado cadastrado.</Text>
-          )}
-
-          {exams.map((exam) => (
-            <View key={exam.id} style={styles.examCard}>
-              <View style={styles.examCardHeader}>
-                <Text style={styles.examDate}>{isoToBR(exam.date)}</Text>
-                <TouchableOpacity onPress={() => handleRemoveExam(exam.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <Text style={styles.examRemove}>🗑️</Text>
-                </TouchableOpacity>
-              </View>
-              <Text style={styles.examDescription} numberOfLines={3}>{exam.description}</Text>
-              {exam.photoUri && (
-                <Image source={{ uri: exam.photoUri }} style={styles.examThumb} resizeMode="cover" />
-              )}
-            </View>
-          ))}
-
-          {showExamForm && (
-            <View style={styles.examForm}>
-              <Text style={styles.fieldLabel}>Data do exame</Text>
+            <View style={styles.fieldGroup}>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Data de nascimento</Text>
               <TextInput
-                style={styles.textInput}
-                value={newExamDate}
-                onChangeText={(t) => setNewExamDate(maskDate(t))}
+                style={[styles.textInput, { color: colors.text, borderBottomColor: colors.border }]}
+                value={birthDate}
+                onChangeText={(text) => setBirthDate(maskDate(text))}
                 placeholder="DD/MM/AAAA"
                 placeholderTextColor={colors.textMuted}
                 keyboardType="numeric"
                 maxLength={10}
+                returnKeyType="next"
               />
-              <Text style={[styles.fieldLabel, { marginTop: spacing.sm }]}>Descrição / Resultado</Text>
-              <TextInput
-                style={[styles.textInput, styles.textInputMultiline]}
-                value={newExamDescription}
-                onChangeText={setNewExamDescription}
-                placeholder="Ex: Colesterol LDL: 140 mg/dL&#10;Glicemia em jejum: 98 mg/dL"
-                placeholderTextColor={colors.textMuted}
-                multiline
-                numberOfLines={4}
-                maxLength={500}
-                textAlignVertical="top"
-              />
-              <TouchableOpacity style={styles.photoButton} onPress={handlePickPhoto} activeOpacity={0.8}>
-                <Text style={styles.photoButtonText}>
-                  {newExamPhotoUri ? '✅ Foto anexada — trocar' : '📷 Anexar foto do resultado'}
-                </Text>
-              </TouchableOpacity>
-              {newExamPhotoUri && (
-                <Image source={{ uri: newExamPhotoUri }} style={styles.examThumbPreview} resizeMode="cover" />
-              )}
-              <View style={styles.examFormActions}>
-                <TouchableOpacity
-                  style={styles.examFormCancel}
-                  onPress={() => {
-                    setShowExamForm(false);
-                    setNewExamDate('');
-                    setNewExamDescription('');
-                    setNewExamPhotoUri(undefined);
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.examFormCancelText}>Cancelar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.examFormConfirm} onPress={handleAddExam} activeOpacity={0.8}>
-                  <Text style={styles.examFormConfirmText}>Confirmar</Text>
-                </TouchableOpacity>
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Sexo biológico</Text>
+              <View style={styles.chipsRow}>
+                {SEX_OPTIONS.map((opt) => (
+                  <TouchableOpacity
+                    key={opt.key}
+                    style={[
+                      styles.chip,
+                      { backgroundColor: colors.background, borderColor: colors.border },
+                      biologicalSex === opt.key && { backgroundColor: colors.primary, borderColor: colors.primary },
+                    ]}
+                    onPress={() => setBiologicalSex(biologicalSex === opt.key ? undefined : opt.key)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[
+                      styles.chipText,
+                      { color: colors.textSecondary },
+                      biologicalSex === opt.key && { color: colors.text },
+                    ]}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
             </View>
-          )}
+          </Section>
 
-          {!showExamForm && (
-            <TouchableOpacity style={styles.addExamButton} onPress={() => setShowExamForm(true)} activeOpacity={0.8}>
-              <Text style={styles.addExamButtonText}>➕ Adicionar Resultado</Text>
-            </TouchableOpacity>
-          )}
-        </Section>
+          {/* Medicamentos */}
+          <Section title="Medicamentos">
+            <View style={styles.switchRow}>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Uso anti-hipertensivos ou outros medicamentos</Text>
+              <Switch
+                value={usesMedication}
+                onValueChange={setUsesMedication}
+                trackColor={{ false: colors.border, true: colors.primary }}
+                thumbColor={colors.text}
+              />
+            </View>
+            {usesMedication && (
+              <View style={styles.fieldGroup}>
+                <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Quais medicamentos?</Text>
+                <TextInput
+                  style={[styles.textInput, styles.textInputMultiline, { color: colors.text, borderColor: colors.border }]}
+                  value={medicationDescription}
+                  onChangeText={setMedicationDescription}
+                  placeholder="Ex: Losartana 50mg, Anlodipino 5mg..."
+                  placeholderTextColor={colors.textMuted}
+                  multiline
+                  numberOfLines={3}
+                  maxLength={300}
+                  textAlignVertical="top"
+                />
+              </View>
+            )}
+          </Section>
 
-        {/* Botão salvar */}
-        <TouchableOpacity
-          style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-          onPress={handleSave}
-          disabled={saving}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.saveButtonText}>
-            {saving ? 'Salvando...' : '💾 Salvar Perfil'}
-          </Text>
-        </TouchableOpacity>
+          {/* Meta de pressão */}
+          <Section title="Meta de Pressão">
+            <View style={styles.switchRow}>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Definir meta de pressão (definida pelo médico)</Text>
+              <Switch
+                value={hasGoal}
+                onValueChange={setHasGoal}
+                trackColor={{ false: colors.border, true: colors.primary }}
+                thumbColor={colors.text}
+              />
+            </View>
+            {hasGoal && (
+              <View style={styles.goalRow}>
+                <View style={styles.goalField}>
+                  <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Sistólica</Text>
+                  <TextInput
+                    style={[styles.goalInput, { color: colors.text, borderBottomColor: colors.border }]}
+                    value={goalSystolic}
+                    onChangeText={setGoalSystolic}
+                    placeholder="120"
+                    placeholderTextColor={colors.textMuted}
+                    keyboardType="numeric"
+                    maxLength={3}
+                  />
+                </View>
+                <Text style={[styles.goalSeparator, { color: colors.textMuted }]}>/</Text>
+                <View style={styles.goalField}>
+                  <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Diastólica</Text>
+                  <TextInput
+                    style={[styles.goalInput, { color: colors.text, borderBottomColor: colors.border }]}
+                    value={goalDiastolic}
+                    onChangeText={setGoalDiastolic}
+                    placeholder="80"
+                    placeholderTextColor={colors.textMuted}
+                    keyboardType="numeric"
+                    maxLength={3}
+                  />
+                </View>
+                <Text style={[styles.goalUnit, { color: colors.textMuted }]}>mmHg</Text>
+              </View>
+            )}
+          </Section>
 
-      </ScrollView>
-    </KeyboardAvoidingView>
+          {/* Fatores de risco */}
+          <Section title="Fatores de Risco Cardiovascular">
+            <View style={styles.switchRow}>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Sou diabético(a)</Text>
+              <Switch
+                value={isDiabetic}
+                onValueChange={setIsDiabetic}
+                trackColor={{ false: colors.border, true: colors.primary }}
+                thumbColor={colors.text}
+              />
+            </View>
+            <View style={styles.switchRow}>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Sou fumante</Text>
+              <Switch
+                value={isSmoker}
+                onValueChange={setIsSmoker}
+                trackColor={{ false: colors.border, true: colors.primary }}
+                thumbColor={colors.text}
+              />
+            </View>
+          </Section>
+
+          {/* Médico */}
+          <Section title="Médico Responsável">
+            <View style={styles.fieldGroup}>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Nome do médico (opcional)</Text>
+              <TextInput
+                style={[styles.textInput, { color: colors.text, borderBottomColor: colors.border }]}
+                value={doctorName}
+                onChangeText={setDoctorName}
+                placeholder="Dr. ..."
+                placeholderTextColor={colors.textMuted}
+                autoCapitalize="words"
+                returnKeyType="done"
+              />
+            </View>
+          </Section>
+
+          {/* Resultados de Exames */}
+          <Section title="Resultados de Exames">
+            {exams.length === 0 && !showExamForm && (
+              <Text style={[styles.emptyExams, { color: colors.textMuted }]}>Nenhum resultado cadastrado.</Text>
+            )}
+
+            {exams.map((exam) => (
+              <View key={exam.id} style={[styles.examCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                <View style={styles.examCardHeader}>
+                  <Text style={[styles.examDate, { color: colors.primary }]}>{isoToBR(exam.date)}</Text>
+                  <TouchableOpacity onPress={() => handleRemoveExam(exam.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <Text style={styles.examRemove}>🗑️</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={[styles.examDescription, { color: colors.text }]} numberOfLines={3}>{exam.description}</Text>
+                {exam.photoUri && (
+                  <Image source={{ uri: exam.photoUri }} style={styles.examThumb} resizeMode="cover" />
+                )}
+              </View>
+            ))}
+
+            {showExamForm && (
+              <View style={[styles.examForm, { backgroundColor: colors.background, borderColor: colors.primary }]}>
+                <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Data do exame</Text>
+                <TextInput
+                  style={[styles.textInput, { color: colors.text, borderBottomColor: colors.border }]}
+                  value={newExamDate}
+                  onChangeText={(t) => setNewExamDate(maskDate(t))}
+                  placeholder="DD/MM/AAAA"
+                  placeholderTextColor={colors.textMuted}
+                  keyboardType="numeric"
+                  maxLength={10}
+                />
+                <Text style={[styles.fieldLabel, { color: colors.textSecondary, marginTop: spacing.sm }]}>Descrição / Resultado</Text>
+                <TextInput
+                  style={[styles.textInput, styles.textInputMultiline, { color: colors.text, borderColor: colors.border }]}
+                  value={newExamDescription}
+                  onChangeText={setNewExamDescription}
+                  placeholder="Ex: Colesterol LDL: 140 mg/dL&#10;Glicemia em jejum: 98 mg/dL"
+                  placeholderTextColor={colors.textMuted}
+                  multiline
+                  numberOfLines={4}
+                  maxLength={500}
+                  textAlignVertical="top"
+                />
+                <TouchableOpacity style={[styles.photoButton, { borderColor: colors.border }]} onPress={handlePickPhoto} activeOpacity={0.8}>
+                  <Text style={[styles.photoButtonText, { color: colors.textSecondary }]}>
+                    {newExamPhotoUri ? '✅ Foto anexada — trocar' : '📷 Anexar foto do resultado'}
+                  </Text>
+                </TouchableOpacity>
+                {newExamPhotoUri && (
+                  <Image source={{ uri: newExamPhotoUri }} style={styles.examThumbPreview} resizeMode="cover" />
+                )}
+                <View style={styles.examFormActions}>
+                  <TouchableOpacity
+                    style={[styles.examFormCancel, { borderColor: colors.border }]}
+                    onPress={() => {
+                      setShowExamForm(false);
+                      setNewExamDate('');
+                      setNewExamDescription('');
+                      setNewExamPhotoUri(undefined);
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.examFormCancelText, { color: colors.textMuted }]}>Cancelar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.examFormConfirm, { backgroundColor: colors.primary }]} onPress={handleAddExam} activeOpacity={0.8}>
+                    <Text style={[styles.examFormConfirmText, { color: colors.text }]}>Confirmar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {!showExamForm && (
+              <TouchableOpacity style={[styles.addExamButton, { borderColor: colors.primary }]} onPress={() => setShowExamForm(true)} activeOpacity={0.8}>
+                <Text style={[styles.addExamButtonText, { color: colors.primary }]}>➕ Adicionar Resultado</Text>
+              </TouchableOpacity>
+            )}
+          </Section>
+
+          {/* Botão salvar */}
+          <TouchableOpacity
+            style={[styles.saveButton, { backgroundColor: colors.primary }, saving && styles.saveButtonDisabled]}
+            onPress={handleSave}
+            disabled={saving}
+            activeOpacity={0.85}
+          >
+            <Text style={[styles.saveButtonText, { color: colors.text }]}>
+              {saving ? 'Salvando...' : '💾 Salvar Perfil'}
+            </Text>
+          </TouchableOpacity>
+
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </GlassBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   loadingContainer: {
     flex: 1,
-    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -486,11 +496,9 @@ const styles = StyleSheet.create({
   title: {
     fontSize: fontSize.xxl,
     fontWeight: '800',
-    color: colors.text,
   },
   subtitle: {
     fontSize: fontSize.sm,
-    color: colors.textSecondary,
     marginTop: 2,
   },
   section: {
@@ -499,13 +507,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: fontSize.sm,
     fontWeight: '700',
-    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: spacing.sm,
   },
   sectionCard: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     gap: spacing.md,
@@ -515,22 +521,18 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontSize: fontSize.sm,
-    color: colors.textSecondary,
     fontWeight: '600',
     flexShrink: 1,
   },
   textInput: {
     fontSize: fontSize.md,
-    color: colors.text,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
     paddingVertical: spacing.xs,
   },
   textInputMultiline: {
     minHeight: 80,
     borderBottomWidth: 0,
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: borderRadius.sm,
     padding: spacing.sm,
     marginTop: spacing.xs,
@@ -550,22 +552,12 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: colors.border,
     alignItems: 'center',
-  },
-  chipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
   },
   chipText: {
     fontSize: fontSize.sm,
-    color: colors.textSecondary,
     fontWeight: '600',
-  },
-  chipTextActive: {
-    color: colors.text,
   },
   goalRow: {
     flexDirection: 'row',
@@ -581,36 +573,29 @@ const styles = StyleSheet.create({
   goalInput: {
     fontSize: 36,
     fontWeight: '800',
-    color: colors.text,
     textAlign: 'center',
     borderBottomWidth: 2,
-    borderBottomColor: colors.border,
     paddingVertical: spacing.xs,
     width: '100%',
   },
   goalSeparator: {
     fontSize: 32,
     fontWeight: '300',
-    color: colors.textMuted,
     marginBottom: spacing.xs,
   },
   goalUnit: {
     fontSize: fontSize.sm,
-    color: colors.textMuted,
     marginBottom: spacing.sm,
   },
   emptyExams: {
     fontSize: fontSize.sm,
-    color: colors.textMuted,
     fontStyle: 'italic',
     textAlign: 'center',
     paddingVertical: spacing.sm,
   },
   examCard: {
-    backgroundColor: colors.background,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.md,
     gap: spacing.xs,
   },
@@ -621,7 +606,6 @@ const styles = StyleSheet.create({
   },
   examDate: {
     fontSize: fontSize.sm,
-    color: colors.primary,
     fontWeight: '700',
   },
   examRemove: {
@@ -629,7 +613,6 @@ const styles = StyleSheet.create({
   },
   examDescription: {
     fontSize: fontSize.sm,
-    color: colors.text,
     lineHeight: 20,
   },
   examThumb: {
@@ -639,10 +622,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   examForm: {
-    backgroundColor: colors.background,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: colors.primary,
     padding: spacing.md,
     gap: spacing.xs,
   },
@@ -654,7 +635,6 @@ const styles = StyleSheet.create({
   },
   photoButton: {
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: borderRadius.md,
     padding: spacing.sm,
     alignItems: 'center',
@@ -662,7 +642,6 @@ const styles = StyleSheet.create({
   },
   photoButtonText: {
     fontSize: fontSize.sm,
-    color: colors.textSecondary,
     fontWeight: '600',
   },
   examFormActions: {
@@ -673,31 +652,26 @@ const styles = StyleSheet.create({
   examFormCancel: {
     flex: 1,
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: borderRadius.md,
     padding: spacing.sm,
     alignItems: 'center',
   },
   examFormCancelText: {
     fontSize: fontSize.sm,
-    color: colors.textMuted,
     fontWeight: '600',
   },
   examFormConfirm: {
     flex: 2,
-    backgroundColor: colors.primary,
     borderRadius: borderRadius.md,
     padding: spacing.sm,
     alignItems: 'center',
   },
   examFormConfirmText: {
     fontSize: fontSize.sm,
-    color: colors.text,
     fontWeight: '700',
   },
   addExamButton: {
     borderWidth: 1.5,
-    borderColor: colors.primary,
     borderRadius: borderRadius.md,
     padding: spacing.sm,
     alignItems: 'center',
@@ -705,11 +679,9 @@ const styles = StyleSheet.create({
   },
   addExamButtonText: {
     fontSize: fontSize.sm,
-    color: colors.primary,
     fontWeight: '700',
   },
   saveButton: {
-    backgroundColor: colors.primary,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     alignItems: 'center',
@@ -721,19 +693,5 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: fontSize.lg,
     fontWeight: '700',
-    color: colors.text,
-  },
-  successBanner: {
-    backgroundColor: colors.normalBg,
-    borderWidth: 1,
-    borderColor: colors.normal,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    alignItems: 'center',
-  },
-  successText: {
-    fontSize: fontSize.md,
-    color: colors.normal,
-    fontWeight: '600',
   },
 });
