@@ -1,42 +1,45 @@
-// HONEST DATA: Brutalist Medical + Warmth
-// Tipografia: Serif bold (títulos) + Monospace (dados) + Sans moderno (corpo)
-// Cores: Medical palette + Gold accent + Black contrast
-// Composição: Bold numbers, asymmetric layout, generous whitespace
+// dPressão — Azul Ardósia + Verde Saúde
+// Paleta: Fundo azul-ardósia suave, bordas cinza soft, ação principal verde saúde
+// Vermelho reservado exclusivamente para ações destrutivas
 
 export const colors = {
-  // Primary medical red (warmth)
-  primary: '#DC3545',       // Mais warm que antes
-  primaryLight: '#E07080',
-  primaryDark: '#A02838',
+  // Ação principal — Verde Saúde
+  primary: '#16A34A',
+  primaryLight: '#22C55E',
+  primaryDark: '#15803D',
 
-  // Backgrounds & Surfaces
-  background: '#FAFAF8',    // Off-white (não branco puro)
-  surface: '#FFFFFF',       // Pure white para cards
-  surfaceLight: '#F5F5F3',  // Subtle gray
-  border: '#000000',        // Black solid borders (brutalist)
+  // Ações destrutivas — Vermelho (apenas excluir/cancelar)
+  danger: '#DC3545',
+  dangerLight: '#E07080',
+  dangerDark: '#A02838',
+
+  // Backgrounds & Surfaces — Azul Ardósia
+  background: '#EEF2F7',
+  surface: '#F8FAFC',
+  surfaceLight: '#F1F5F9',
+  border: '#E2E8F0',
 
   // Text hierarchy
-  text: '#1A1A1A',          // Near-black (não pure white)
-  textSecondary: '#5A5A5A', // Medium gray
-  textMuted: '#888888',     // Light gray
+  text: '#0F172A',
+  textSecondary: '#64748B',
+  textMuted: '#94A3B8',
 
-  // Accent: Warm gold
-  accent: '#C9A961',        // Gold para highlights
+  // Accent
+  accent: '#C9A961',
   accentLight: '#E8D4B8',
 
-  // Status colors (medical palette - kept vibrant)
-  normal: '#22C55E',        // Bright green
+  // Status colors (sem alteração)
+  normal: '#22C55E',
   normalBg: '#F0FDF4',
-  elevated: '#FBBF24',      // Amber
+  elevated: '#FBBF24',
   elevatedBg: '#FFFBEB',
-  hypertension1: '#FB923C', // Orange
+  hypertension1: '#FB923C',
   hypertension1Bg: '#FEF3C7',
-  hypertension2: '#EF4444', // Red
+  hypertension2: '#EF4444',
   hypertension2Bg: '#FEE2E2',
-  crisis: '#A855F7',        // Purple
+  crisis: '#A855F7',
   crisisBg: '#F3E8FF',
 
-  // Utility
   overlay: 'rgba(0,0,0,0.5)',
 };
 
@@ -51,10 +54,10 @@ export const spacing = {
 };
 
 export const borderRadius = {
-  sm: 2,      // More square/brutalist
-  md: 4,
-  lg: 8,
-  xl: 12,
+  sm: 6,
+  md: 8,
+  lg: 12,
+  xl: 16,
   full: 999,
 };
 
@@ -70,40 +73,32 @@ export const fontSize = {
   giant: 64,  // Huge numbers for BP
 };
 
-// DARK MODE THEME (inverted aesthetic, same principles)
+// DARK MODE THEME
 export const colorsDark = {
-  // Primary medical red (keep warm)
-  primary: '#DC3545',
-  primaryLight: '#E07080',
-  primaryDark: '#A02838',
-
-  // Dark backgrounds & Surfaces
-  background: '#0F0F0D',    // Near-black
-  surface: '#1A1A18',       // Very dark gray
-  surfaceLight: '#2A2A28',  // Slightly lighter
-  border: '#FFFFFF',        // WHITE borders (inverted from black)
-
-  // Text hierarchy (inverted)
-  text: '#FAFAF8',          // Off-white
-  textSecondary: '#A5A5A5', // Medium gray
-  textMuted: '#777777',     // Light gray
-
-  // Accent: Keep gold
-  accent: '#C9A961',        // Gold still works
+  primary: '#16A34A',
+  primaryLight: '#22C55E',
+  primaryDark: '#15803D',
+  danger: '#DC3545',
+  dangerLight: '#E07080',
+  dangerDark: '#A02838',
+  background: '#0A0F0A',
+  surface: '#111814',
+  surfaceLight: '#1A2A1A',
+  border: '#2A3A2A',
+  text: '#F0FDF4',
+  textSecondary: '#86EFAC',
+  textMuted: '#4ADE80',
+  accent: '#C9A961',
   accentLight: '#E8D4B8',
-
-  // Status colors (keep vibrant)
-  normal: '#22C55E',        // Bright green
+  normal: '#22C55E',
   normalBg: '#0F2912',
-  elevated: '#FBBF24',      // Amber
+  elevated: '#FBBF24',
   elevatedBg: '#1F1A05',
-  hypertension1: '#FB923C', // Orange
+  hypertension1: '#FB923C',
   hypertension1Bg: '#1F1305',
-  hypertension2: '#EF4444', // Red
+  hypertension2: '#EF4444',
   hypertension2Bg: '#2D0B0B',
-  crisis: '#A855F7',        // Purple
+  crisis: '#A855F7',
   crisisBg: '#2D1F47',
-
-  // Utility
   overlay: 'rgba(255,255,255,0.5)',
 };
