@@ -483,15 +483,15 @@ const styles = StyleSheet.create({
   },
   exportButton: {
     flex: 1,
+    aspectRatio: 1,
     borderRadius: borderRadius.md,
-    padding: spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.sm,
+    gap: spacing.xs,
     borderWidth: 1.5,
   },
   exportButtonIcon: {
-    fontSize: fontSize.lg,
+    fontSize: 28,
   },
   exportButtonLabel: {
     fontSize: fontSize.xs,
