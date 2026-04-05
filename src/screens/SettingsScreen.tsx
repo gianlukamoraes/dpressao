@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { AppSettings } from '../types';
 import { getSettings, updateSettings, resetSettings } from '../storage/settings';
 import { getReadings, deleteReading } from '../storage/readings';
