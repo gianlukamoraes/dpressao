@@ -23,9 +23,21 @@ type ReadingDetailRouteProps = RouteProp<RootStackParamList, 'ReadingDetail'>;
 export function ReadingDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute<ReadingDetailRouteProps>();
-  const { colors } = useTheme();
+  const { colors, isLiquidGlass } = useTheme();
   const { reading } = route.params;
   const classification = classifyBP(reading.systolic, reading.diastolic);
+
+  const CATEGORY_COLORS: Record<string, { color: string; bgColor: string }> = {
+    normal:       { color: colors.normal,       bgColor: colors.normalBg },
+    elevated:     { color: colors.elevated,     bgColor: colors.elevatedBg },
+    hypertension1:{ color: colors.hypertension1,bgColor: colors.hypertension1Bg },
+    hypertension2:{ color: colors.hypertension2,bgColor: colors.hypertension2Bg },
+    crisis:       { color: colors.crisis,       bgColor: colors.crisisBg },
+  };
+  const cardColors = CATEGORY_COLORS[classification.category] ?? {
+    color: classification.color,
+    bgColor: classification.bgColor,
+  };
 
   function handleDelete() {
     Alert.alert(
@@ -55,7 +67,16 @@ export function ReadingDetailScreen() {
         <StatusBar barStyle="light-content" backgroundColor={colors.background} />
 
         {/* Card principal */}
-        <View style={[styles.mainCard, { borderColor: classification.color, backgroundColor: classification.bgColor }]}>
+        <View style={[
+          styles.mainCard,
+          {
+            backgroundColor: cardColors.bgColor,
+            borderColor: isLiquidGlass ? cardColors.color + '55' : cardColors.color,
+            borderWidth: isLiquidGlass ? 1 : 1.5,
+            overflow: 'hidden',
+          },
+        ]}>
+          {isLiquidGlass && <View style={styles.glassHighlight} />}
           <View style={styles.mainCardHeader}>
             <View>
               <Text style={[styles.dateText, { color: colors.textSecondary }]}>{formatDate(reading.date)}</Text>
@@ -64,14 +85,14 @@ export function ReadingDetailScreen() {
             <BPBadge classification={classification} size="lg" />
           </View>
 
-          <Text style={[styles.bpBig, { color: classification.color }]}>
+          <Text style={[styles.bpBig, { color: cardColors.color }]}>
             {reading.systolic}
             <Text style={[styles.bpSlash, { color: colors.textSecondary }]}>/</Text>
             {reading.diastolic}
             <Text style={[styles.bpUnit, { color: colors.textSecondary }]}> mmHg</Text>
           </Text>
 
-          <Text style={[styles.classificationDescription, { color: classification.color }]}>
+          <Text style={[styles.classificationDescription, { color: cardColors.color }]}>
             {classification.description}
           </Text>
         </View>
@@ -180,9 +201,17 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.md,
   },
+  glassHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.30)',
+    zIndex: 1,
+  },
   mainCard: {
     borderRadius: borderRadius.lg,
-    borderWidth: 1.5,
     padding: spacing.lg,
     gap: spacing.sm,
   },
