@@ -17,6 +17,7 @@
       }
     },
     "production": {
+      "autoIncrement": true,
       "ios": {
         "resourceClass": "m-medium"
       },
@@ -26,10 +27,6 @@
     }
   },
   "submit": {
-    "production": {
-      "ios": {
-        "autoIncrement": true
-      }
-    }
+    "production": {}
   }
 }
