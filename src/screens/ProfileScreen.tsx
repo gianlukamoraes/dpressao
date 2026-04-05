@@ -65,6 +65,15 @@ async function pickImage(): Promise<string | null> {
   }
 }
 
+function Section({ title, children, colors }: { title: string; children: React.ReactNode; colors: ReturnType<typeof useTheme>['colors'] }) {
+  return (
+    <View style={styles.section}>
+      <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{title}</Text>
+      <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>{children}</View>
+    </View>
+  );
+}
+
 export function ProfileScreen() {
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
@@ -182,15 +191,6 @@ export function ProfileScreen() {
     { key: 'other', label: 'Outro' },
   ];
 
-  function Section({ title, children }: { title: string; children: React.ReactNode }) {
-    return (
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{title}</Text>
-        <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>{children}</View>
-      </View>
-    );
-  }
-
   if (loading) {
     return (
       <GlassBackground>
@@ -216,7 +216,7 @@ export function ProfileScreen() {
           </View>
 
           {/* Dados pessoais */}
-          <Section title="Dados Pessoais">
+          <Section colors={colors} title="Dados Pessoais">
             <View style={styles.fieldGroup}>
               <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Nome</Text>
               <TextInput
@@ -272,7 +272,7 @@ export function ProfileScreen() {
           </Section>
 
           {/* Medicamentos */}
-          <Section title="Medicamentos">
+          <Section colors={colors} title="Medicamentos">
             <View style={styles.switchRow}>
               <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Uso anti-hipertensivos ou outros medicamentos</Text>
               <Switch
@@ -301,7 +301,7 @@ export function ProfileScreen() {
           </Section>
 
           {/* Meta de pressão */}
-          <Section title="Meta de Pressão">
+          <Section colors={colors} title="Meta de Pressão">
             <View style={styles.switchRow}>
               <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Definir meta de pressão (definida pelo médico)</Text>
               <Switch
@@ -344,7 +344,7 @@ export function ProfileScreen() {
           </Section>
 
           {/* Fatores de risco */}
-          <Section title="Fatores de Risco Cardiovascular">
+          <Section colors={colors} title="Fatores de Risco Cardiovascular">
             <View style={styles.switchRow}>
               <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Sou diabético(a)</Text>
               <Switch
@@ -366,7 +366,7 @@ export function ProfileScreen() {
           </Section>
 
           {/* Médico */}
-          <Section title="Médico Responsável">
+          <Section colors={colors} title="Médico Responsável">
             <View style={styles.fieldGroup}>
               <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Nome do médico (opcional)</Text>
               <TextInput
@@ -382,7 +382,7 @@ export function ProfileScreen() {
           </Section>
 
           {/* Resultados de Exames */}
-          <Section title="Resultados de Exames">
+          <Section colors={colors} title="Resultados de Exames">
             {exams.length === 0 && !showExamForm && (
               <Text style={[styles.emptyExams, { color: colors.textMuted }]}>Nenhum resultado cadastrado.</Text>
             )}
