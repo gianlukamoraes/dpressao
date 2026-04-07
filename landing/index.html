@@ -192,7 +192,7 @@
 </head>
 <body>
 <div id="prog"></div>
-<nav id="dnav">
+<nav id="dnav" aria-label="Navegação por cenas">
   <div class="dd on"></div><div class="dd"></div><div class="dd"></div><div class="dd"></div><div class="dd"></div>
 </nav>
 
@@ -205,7 +205,7 @@
   <canvas id="cv"></canvas>
 
   <!-- veins -->
-  <div id="veins">
+  <div id="veins" aria-hidden="true">
     <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
       <path class="vp m" d="M720,450 C570,365 365,272 138,248 C65,241 18,258 0,272"/>
       <path class="vp m" d="M720,450 C870,360 1075,268 1302,245 C1378,238 1422,255 1440,270"/>
@@ -223,7 +223,7 @@
   </div>
 
   <!-- Heart container: pulsa via CSS, serve de âncora de glow sobre o Spline -->
-  <div id="heartOuter"><div id="heartInner">
+  <div id="heartOuter" aria-hidden="true"><div id="heartInner">
     <!-- SVG fallback visível como reforço gráfico sobre o Spline -->
     <svg id="heartFallback" viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg"
       style="position:absolute;inset:0;width:100%;height:100%;opacity:0.4">
@@ -351,7 +351,7 @@
   </div>
 
   <!-- hint -->
-  <div id="hint"><span class="hs">scroll</span><div class="hl"></div></div>
+  <div id="hint" aria-hidden="true"><span class="hs">scroll</span><div class="hl"></div></div>
 </div>
 
 <script>
@@ -585,8 +585,8 @@ window.addEventListener('keydown', function(e){
 
 // SVG fallback agora é decorativo (opacity:0.4 no inline) — nada a fazer
 
-// Expor para debug: _show(i) navega para cena i diretamente
-window._show = (i) => { applyFrac(i / (SCENES - 1)); };
+// debug: window._show(i) navega para cena i, window._go(frac) salta para fração
+// window._show = (i) => { applyFrac(i / (SCENES - 1)); };
 
 // Init imediato — o script está no final do body, o DOM já está pronto
 // page nunca scrolls (wheel-based), mas garantimos scrollY=0 por precaução
@@ -619,8 +619,7 @@ setTimeout(function() {
 
   wrapper.appendChild(iframe);
 }, 800);
-// Expor applyFrac para debug (substitui _show)
-window._go = applyFrac;
+// window._go = applyFrac;
 </script>
 </body>
 </html>
