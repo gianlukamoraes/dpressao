@@ -153,6 +153,171 @@
   </style>
 </head>
 <body>
-  <!-- conteúdo virá nos tasks seguintes -->
+<div id="prog"></div>
+<nav id="dnav">
+  <div class="dd on"></div><div class="dd"></div><div class="dd"></div><div class="dd"></div><div class="dd"></div>
+</nav>
+
+<div class="stage">
+  <!-- Wrapper faz overflow:hidden no Spline sem quebrar o stage -->
+  <div id="splineWrapper">
+    <iframe id="splineHeart"
+      src="https://my.spline.design/hearthealthhudfuturisticuidesign-93eAnzysBJHcHg87NPt5hzqG/?bg=false"
+      frameborder="0"
+      allowtransparency="true"
+    ></iframe>
+  </div>
+
+  <canvas id="cv"></canvas>
+
+  <!-- veins -->
+  <div id="veins">
+    <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+      <path class="vp m" d="M720,450 C570,365 365,272 138,248 C65,241 18,258 0,272"/>
+      <path class="vp m" d="M720,450 C870,360 1075,268 1302,245 C1378,238 1422,255 1440,270"/>
+      <path class="vp m" d="M720,450 C698,295 672,165 645,42"/>
+      <path class="vp m" d="M720,450 C742,295 768,165 795,42"/>
+      <path class="vp m" d="M720,450 C570,538 362,625 138,670 C62,688 16,690 0,692"/>
+      <path class="vp m" d="M720,450 C872,542 1082,628 1305,672 C1382,690 1426,692 1440,694"/>
+      <path class="vp t" d="M425,338 C362,300 288,282 202,300 C150,312 105,335 68,356"/>
+      <path class="vp t" d="M1018,335 C1082,297 1162,280 1250,298 C1305,310 1358,333 1396,354"/>
+      <path class="vp t" d="M674,196 C656,140 636,88 608,34"/>
+      <path class="vp t" d="M766,196 C784,140 804,88 832,34"/>
+      <path class="vp t" d="M562,552 C498,595 412,638 312,665 C235,683 158,686 98,688"/>
+      <path class="vp t" d="M882,550 C948,593 1035,636 1138,663 C1218,681 1298,684 1362,687"/>
+    </svg>
+  </div>
+
+  <!-- Heart container: pulsa via CSS, serve de âncora de glow sobre o Spline -->
+  <div id="heartOuter"><div id="heartInner">
+    <!-- SVG fallback visível como reforço gráfico sobre o Spline -->
+    <svg id="heartFallback" viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg"
+      style="position:absolute;inset:0;width:100%;height:100%;opacity:0.4">
+      <defs>
+        <radialGradient id="hg" cx="38%" cy="32%" r="65%">
+          <stop offset="0%"   stop-color="#FF4040"/>
+          <stop offset="30%"  stop-color="#CC0000"/>
+          <stop offset="70%"  stop-color="#800000"/>
+          <stop offset="100%" stop-color="#1A0000"/>
+        </radialGradient>
+        <filter id="gf">
+          <feGaussianBlur stdDeviation="2.5" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <ellipse cx="138" cy="160" rx="106" ry="98" fill="rgba(80,0,0,.22)" filter="url(#gf)"/>
+      <path d="M142 72 C162 64,192 66,212 82 C230 96,238 120,236 148 C234 174,224 198,208 218
+               C192 237,170 250,148 256 C128 262,108 254,92 240 C74 224,62 200,60 172
+               C58 146,66 118,82 98 C96 80,118 68,140 66 C141 65,141 65,142 72Z"
+        fill="url(#hg)" stroke="rgba(255,70,70,.35)" stroke-width=".9" filter="url(#gf)" opacity=".97"/>
+      <!-- Aortic arch -->
+      <path d="M150 72 C152 50,156 34,163 22 C170 10,183 4,196 4 C211 4,223 12,228 24 C234 38,230 54,220 64 C214 70,207 74,200 76"
+        fill="none" stroke="#BB1111" stroke-width="10" stroke-linecap="round" opacity=".9"/>
+      <!-- Pulmonary trunk -->
+      <path d="M136 74 C130 58, 120 44, 106 34 C96 26, 82 22, 72 26"
+        fill="none" stroke="#440000" stroke-width="10" stroke-linecap="round" opacity=".65"/>
+      <!-- Tube -->
+      <path d="M 136 74 C 130 58, 120 44, 106 34 C 96 26, 82 22, 72 26"
+        fill="none" stroke="#881111" stroke-width="7" stroke-linecap="round" opacity=".82"/>
+
+      <!-- SUPERIOR VENA CAVA — enters right atrium from upper right -->
+      <path d="M 234 108 C 244 90, 248 66, 244 44 C 241 28, 234 16, 225 10"
+        fill="none" stroke="#3D0000" stroke-width="8" stroke-linecap="round" opacity=".72"/>
+      <path d="M 234 108 C 244 90, 248 66, 244 44 C 241 28, 234 16, 225 10"
+        fill="none" stroke="#660000" stroke-width="5" stroke-linecap="round" opacity=".7"/>
+
+      <!-- ── CORONARY ARTERIES (surface vessels) ── -->
+
+      <!-- Left anterior descending (LAD) — runs down the front center groove -->
+      <path d="M 146 92 C 144 118, 140 148, 138 180 C 136 206, 136 222, 138 240"
+        fill="none" stroke="#FF3333" stroke-width="2" opacity=".5"/>
+
+      <!-- Diagonal branches off LAD (smaller vessels going left) -->
+      <path d="M 144 116 C 132 120, 118 122, 106 118" fill="none" stroke="#EE2222" stroke-width="1.1" opacity=".38"/>
+      <path d="M 142 144 C 130 150, 116 152, 104 146" fill="none" stroke="#EE2222" stroke-width="1"   opacity=".32"/>
+      <path d="M 141 172 C 128 178, 114 179, 104 174" fill="none" stroke="#DD2222" stroke-width=".9"  opacity=".28"/>
+
+      <!-- Right coronary artery (RCA) — curves along the right atrioventricular groove -->
+      <path d="M 196 86 C 218 106, 234 132, 234 158 C 234 182, 222 206, 205 222"
+        fill="none" stroke="#CC1111" stroke-width="1.8" opacity=".42"/>
+
+      <!-- Circumflex branch — curves around the left side -->
+      <path d="M 140 92 C 108 100, 82 118, 70 148 C 64 168, 66 192, 76 212"
+        fill="none" stroke="#BB1111" stroke-width="1.4" opacity=".36"/>
+
+      <!-- Apex vessel -->
+      <path d="M 138 236 C 139 244, 141 250, 143 255"
+        fill="none" stroke="#AA0000" stroke-width="1.5" opacity=".4"/>
+
+      <!-- Interventricular groove (subtle dark line between ventricles) -->
+      <path d="M 145 94 C 144 128, 142 168, 141 210 C 141 222, 141 234, 142 244"
+        fill="none" stroke="rgba(20,0,0,.55)" stroke-width="1.1"/>
+
+    </svg>
+  </div></div>
+
+  <!-- S0: HERO -->
+  <div class="sc" id="s0">
+    <div id="hname" class="h-name">dPressão</div>
+    <div id="hsub" class="h-sub">Monitore. Entenda. Viva melhor.</div>
+  </div>
+
+  <!-- S1: TAGLINE -->
+  <div class="sc" id="s1" style="justify-content:flex-end;padding-bottom:9vh">
+    <p class="tag" id="tag1">Seu coração fala.<br/><span>Você precisa ouvir.</span></p>
+  </div>
+
+  <!-- S2: BP -->
+  <div class="sc" id="s2">
+    <div>
+      <div class="bp-row">
+        <span class="bpn sys" id="bpS">0</span>
+        <span class="sep">/</span>
+        <span class="bpn dia" id="bpD">0</span>
+      </div>
+      <div class="bp-lbl">sistólica &nbsp;/&nbsp; diastólica</div>
+      <div class="bp-ok" id="bpOk">● Normal</div>
+    </div>
+  </div>
+
+  <!-- S3: ECG -->
+  <div class="sc" id="s3">
+    <div class="ecg-w">
+      <svg class="ecg-svg" viewBox="0 0 820 96">
+        <path class="ecg-p" id="ecgP"
+          d="M0,48 L72,48 L90,48 L100,35 L112,70 L127,4 L142,84 L157,48 L200,48
+             L272,48 L290,48 L300,35 L312,70 L327,4 L342,84 L357,48 L400,48
+             L472,48 L490,48 L500,35 L512,70 L527,4 L542,84 L557,48 L600,48
+             L672,48 L690,48 L700,35 L712,70 L727,4 L742,84 L757,48 L820,48"/>
+      </svg>
+      <p class="priv" id="priv">
+        Seus dados ficam<br/><em>só no seu dispositivo.</em><br/>Sempre.
+      </p>
+    </div>
+  </div>
+
+  <!-- S4: CTA -->
+  <div class="sc" id="s4">
+    <p class="cta-pre">Disponível agora</p>
+    <h2 class="cta-ttl">Comece a cuidar<br/>do seu coração</h2>
+    <div class="btns">
+      <a href="#" class="btn ios" id="b1">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="black">
+          <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+        </svg>
+        <span><span class="btxt-s">Download na</span><span class="btxt-m">App Store</span></span>
+      </a>
+      <a href="#" class="btn and" id="b2">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+          <path d="M3,20.5v-17c0-.83.93-1.3 1.6-.8l14,8.5c.63.38.63 1.32 0 1.7l-14,8.5C3.93,21.8,3,21.33,3,20.5z"/>
+        </svg>
+        <span><span class="btxt-s">Disponível no</span><span class="btxt-m">Google Play</span></span>
+      </a>
+    </div>
+  </div>
+
+  <!-- hint -->
+  <div id="hint"><span class="hs">scroll</span><div class="hl"></div></div>
+</div>
 </body>
 </html>
