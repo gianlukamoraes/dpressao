@@ -319,5 +319,249 @@
   <!-- hint -->
   <div id="hint"><span class="hs">scroll</span><div class="hl"></div></div>
 </div>
+
+<script>
+// ═══ SPIRAL CANVAS ═══════════════════════════════════════════════
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let W,H,CX,CY;
+let tProg = 0.1, cProg = 0.1; // target / current progress
+let tRot = 0, cRot = 0;
+
+function resize(){
+  W = cv.width = window.innerWidth;
+  H = cv.height = window.innerHeight;
+  CX = W/2; CY = H/2;
+}
+resize();
+window.addEventListener('resize', resize);
+
+function drawFrame(){
+  ctx.clearRect(0,0,W,H);
+  cProg += (tProg - cProg) * 0.05;
+  cRot  += (tRot  - cRot)  * 0.04;
+
+  const p = Math.max(0.1, cProg);
+
+  // ambient glow
+  const ag = ctx.createRadialGradient(CX,CY,0, CX,CY, 320 + p*130);
+  ag.addColorStop(0, `rgba(120,0,0,${0.18 + p*0.14})`);
+  ag.addColorStop(0.5,`rgba(60,0,0,${0.08 + p*0.06})`);
+  ag.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = ag;
+  ctx.beginPath(); ctx.arc(CX,CY, 320+p*130, 0, Math.PI*2); ctx.fill();
+
+  // spiral arms
+  const ARMS = 2;
+  const maxT = 4 + p*2;
+  const base = 70;
+  const spread = 22 + p*14;
+  const PTS = 500;
+
+  for(let a=0; a<ARMS; a++){
+    const off = (a/ARMS)*Math.PI*2;
+    ctx.beginPath();
+    let first = true;
+    for(let i=0; i<=PTS; i++){
+      const t = i/PTS;
+      const ang = t*maxT*Math.PI*2 + off + cRot;
+      const r = base + t*spread*maxT;
+      const x = CX + Math.cos(ang)*r;
+      const y = CY + Math.sin(ang)*r;
+      first ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+      first = false;
+    }
+    const alpha = 0.35 + p*0.25;
+    const sg = ctx.createLinearGradient(CX-350,CY,CX+350,CY);
+    sg.addColorStop(0, `rgba(100,0,0,${alpha*0.5})`);
+    sg.addColorStop(0.5,`rgba(220,0,0,${alpha})`);
+    sg.addColorStop(1, `rgba(255,23,68,${alpha*0.7})`);
+    ctx.strokeStyle = sg;
+    ctx.lineWidth = 1.2 + p*0.9;
+    ctx.shadowColor = 'rgba(255,23,68,.45)';
+    ctx.shadowBlur = 10 + p*14;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  // inner pulsing dots
+  const now = Date.now();
+  const dotR = 58 + p*22;
+  for(let i=0; i<14; i++){
+    const ang = (i/14)*Math.PI*2 + cRot*1.6;
+    const x = CX + Math.cos(ang)*dotR;
+    const y = CY + Math.sin(ang)*dotR;
+    const al = 0.12 + 0.22*Math.sin(now*0.003 + i*0.75);
+    ctx.beginPath(); ctx.arc(x,y,2.2,0,Math.PI*2);
+    ctx.fillStyle = `rgba(255,23,68,${al})`; ctx.fill();
+  }
+
+  // scene 2+: contracting rings
+  if(cProg > 0.55){
+    const ri = (cProg-0.55)/0.45;
+    for(let r=0; r<3; r++){
+      const rp = ((now*0.0007 + r*0.33) % 1);
+      const rr = 220 - rp*180;
+      ctx.beginPath(); ctx.arc(CX,CY,rr,0,Math.PI*2);
+      ctx.strokeStyle = `rgba(255,23,68,${rp*0.28*ri})`;
+      ctx.lineWidth=1.4; ctx.stroke();
+    }
+  }
+
+  requestAnimationFrame(drawFrame);
+}
+drawFrame();
+
+// ═══ SCENE SYSTEM ════════════════════════════════════════════════
+const SCS  = [0,1,2,3,4].map(i=>document.getElementById('s'+i));
+const DOTS = document.querySelectorAll('.dd');
+const PROG = document.getElementById('prog');
+const HINT = document.getElementById('hint');
+const HEART= document.getElementById('heartOuter');
+const VEINS= document.getElementById('veins');
+const VPATHS=document.querySelectorAll('.vp');
+
+let cur = -1, bpDone=false, ecgDone=false;
+
+function show(idx){
+  SCS.forEach((el,i)=>{
+    anime.remove(el); // cancel any in-flight animation + complete callbacks
+    if(i===idx){
+      el.style.visibility='visible';
+      el.style.opacity='0';
+      anime({targets:el, opacity:1, duration:500, easing:'easeOutQuad'});
+    } else {
+      el.style.opacity='0';
+      el.style.visibility='hidden';
+    }
+  });
+  DOTS.forEach((d,i)=>d.classList.toggle('on',i===idx));
+}
+
+// spiral-in entrance for text elements
+function spinIn(sel, delay=0){
+  anime({
+    targets: sel,
+    opacity:[0,1], translateY:[55,0], rotate:['-7deg','0deg'], scale:[0.88,1],
+    duration:850, delay:anime.stagger(100,{start:delay}),
+    easing:'easeOutBack(1.15)',
+  });
+}
+
+const handlers = {
+  0(){
+    HEART.style.opacity='1'; HEART.style.transform='translate(-50%,-50%) scale(1)';
+    anime.set(VEINS,{opacity:0});
+    VPATHS.forEach(p=>{ p.style.strokeDashoffset='2200'; });
+    bpDone=false; ecgDone=false;
+    HINT.style.opacity='1';
+    spinIn(['#hname','#hsub'], 150);
+    tProg=0.12; tRot=0;
+  },
+  1(){
+    HINT.style.opacity='0';
+    anime({targets:HEART, opacity:0.28, duration:900, easing:'easeInOutQuart',
+      update(a){ HEART.style.transform=`translate(-50%,-50%) scale(${1 - 0.48*(a.progress/100)})` }});
+    anime.set(VEINS,{opacity:1});
+    anime({targets:'.vp.m', strokeDashoffset:[2200,0], duration:1500, delay:anime.stagger(190), easing:'easeInOutQuart'});
+    anime({targets:'.vp.t', strokeDashoffset:[2200,0], duration:1100, delay:anime.stagger(120,{start:450}), easing:'easeInOutQuart'});
+    spinIn('#tag1', 550);
+    tProg=0.42; tRot=Math.PI*0.55;
+  },
+  2(){
+    anime({targets:HEART, opacity:0, duration:500, easing:'easeInQuart',
+      update(a){ HEART.style.transform=`translate(-50%,-50%) scale(${0.52 - 0.52*(a.progress/100)})` }});
+    anime.set(VEINS,{opacity:0});
+    if(!bpDone){
+      bpDone=true;
+      spinIn('.bp-row',0); spinIn('.bp-lbl',150);
+      const sE=document.getElementById('bpS'), dE=document.getElementById('bpD');
+      anime({targets:{v:0},v:120,round:1,duration:1900,easing:'easeOutQuart',
+        update(a){sE.textContent=Math.round(a.animations[0].currentValue);}});
+      anime({targets:{v:0},v:80,round:1,duration:1900,easing:'easeOutQuart',
+        update(a){dE.textContent=Math.round(a.animations[0].currentValue);}});
+      anime({targets:'#bpOk',opacity:[0,1],translateY:[10,0],duration:550,delay:2100,easing:'easeOutExpo'});
+    }
+    tProg=0.66; tRot=Math.PI*1.35;
+  },
+  3(){
+    if(!ecgDone){
+      ecgDone=true;
+      anime({targets:'#ecgP', strokeDashoffset:[2200,0], duration:2500, easing:'linear'});
+      anime({targets:'#priv', opacity:[0,1], translateY:[28,0], duration:800, delay:2300, easing:'easeOutExpo'});
+    }
+    tProg=0.84; tRot=Math.PI*2.1;
+  },
+  4(){
+    anime({
+      targets:'.btn', opacity:[0,1], translateY:[38,0], rotate:['-5deg','0deg'], scale:[0.9,1],
+      duration:750, delay:anime.stagger(140,{start:250}), easing:'easeOutBack(1.2)',
+    });
+    spinIn('.cta-pre',0); spinIn('.cta-ttl',80);
+    tProg=1; tRot=Math.PI*3.1;
+  },
+};
+
+// ── Wheel-based fake scroll (page stays at scrollY=0 always) ────
+let wheelFrac = 0;
+const SCENES = 5;
+const WHEEL_SENSITIVITY = 0.0003;
+
+// Touch support
+let touchStartY = 0;
+
+function applyFrac(frac){
+  wheelFrac = Math.min(1, Math.max(0, frac));
+  PROG.style.width = (wheelFrac * 100) + '%';
+  const idx = Math.min(Math.floor(wheelFrac * SCENES), SCENES - 1);
+  if(idx !== cur){
+    cur = idx;
+    show(idx);
+    handlers[idx]?.();
+  }
+}
+
+window.addEventListener('wheel', function(e){
+  e.preventDefault();
+  applyFrac(wheelFrac + e.deltaY * WHEEL_SENSITIVITY);
+}, {passive: false});
+
+window.addEventListener('touchstart', function(e){
+  touchStartY = e.touches[0].clientY;
+}, {passive: true});
+
+window.addEventListener('touchmove', function(e){
+  e.preventDefault();
+  const dy = touchStartY - e.touches[0].clientY;
+  touchStartY = e.touches[0].clientY;
+  applyFrac(wheelFrac + dy * WHEEL_SENSITIVITY * 3);
+}, {passive: false});
+
+// Keyboard navigation
+window.addEventListener('keydown', function(e){
+  const step = 1 / (SCENES - 1);
+  if(e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' '){
+    e.preventDefault();
+    applyFrac(wheelFrac + step);
+  } else if(e.key === 'ArrowUp' || e.key === 'PageUp'){
+    e.preventDefault();
+    applyFrac(wheelFrac - step);
+  }
+});
+
+// SVG fallback agora é decorativo (opacity:0.4 no inline) — nada a fazer
+
+// Expor para debug: _show(i) navega para cena i diretamente
+window._show = (i) => { applyFrac(i / (SCENES - 1)); };
+
+// Init imediato — o script está no final do body, o DOM já está pronto
+// page nunca scrolls (wheel-based), mas garantimos scrollY=0 por precaução
+window.scrollTo({top:0,behavior:'instant'});
+cur = 0;
+show(0);
+handlers[0]();
+// Expor applyFrac para debug (substitui _show)
+window._go = applyFrac;
+</script>
 </body>
 </html>
