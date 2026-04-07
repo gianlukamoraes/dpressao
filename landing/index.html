@@ -4,11 +4,13 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="description" content="Monitore sua pressão arterial de forma simples e segura, com privacidade total."/>
+  <meta name="theme-color" content="#050508"/>
 
   <!-- Open Graph -->
   <meta property="og:type"        content="website"/>
   <meta property="og:title"       content="dPressão — Monitore seu coração"/>
   <meta property="og:description" content="Monitore sua pressão arterial de forma simples e segura, com privacidade total."/>
+  <!-- TODO: criar og-image.png (1200x630px) com print da tela hero -->
   <meta property="og:image"       content="https://dpressao.app/og-image.png"/>
   <meta property="og:url"         content="https://dpressao.app/"/>
 
@@ -16,6 +18,7 @@
   <meta name="twitter:card"        content="summary_large_image"/>
   <meta name="twitter:title"       content="dPressão — Monitore seu coração"/>
   <meta name="twitter:description" content="Monitore sua pressão arterial de forma simples e segura, com privacidade total."/>
+  <!-- TODO: og-image.png — mesmo arquivo -->
   <meta name="twitter:image"       content="https://dpressao.app/og-image.png"/>
 
   <!-- Favicon -->
@@ -202,7 +205,7 @@
     <div id="splinePlaceholder" style="position:absolute;inset:0;background:radial-gradient(ellipse at 45% 45%,#1a0505 0%,#050508 70%)"></div>
   </div>
 
-  <canvas id="cv"></canvas>
+  <canvas id="cv" aria-hidden="true"></canvas>
 
   <!-- veins -->
   <div id="veins" aria-hidden="true">
@@ -226,7 +229,7 @@
   <div id="heartOuter" aria-hidden="true"><div id="heartInner">
     <!-- SVG fallback visível como reforço gráfico sobre o Spline -->
     <svg id="heartFallback" viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg"
-      style="position:absolute;inset:0;width:100%;height:100%;opacity:0.4">
+      style="position:absolute;inset:0;width:100%;height:100%;opacity:0">
       <defs>
         <radialGradient id="hg" cx="38%" cy="32%" r="65%">
           <stop offset="0%"   stop-color="#FF4040"/>
@@ -583,10 +586,9 @@ window.addEventListener('keydown', function(e){
   }
 });
 
-// SVG fallback agora é decorativo (opacity:0.4 no inline) — nada a fazer
-
-// debug: window._show(i) navega para cena i, window._go(frac) salta para fração
-// window._show = (i) => { applyFrac(i / (SCENES - 1)); };
+// debug helpers (uncomment para QA):
+// window._show = i => applyFrac(i / (SCENES - 1));
+// window._go   = applyFrac;
 
 // Init imediato — o script está no final do body, o DOM já está pronto
 // page nunca scrolls (wheel-based), mas garantimos scrollY=0 por precaução
@@ -603,11 +605,17 @@ setTimeout(function() {
   iframe.src = 'https://my.spline.design/hearthealthhudfuturisticuidesign-93eAnzysBJHcHg87NPt5hzqG/?bg=false';
   iframe.frameBorder = '0';
   iframe.setAttribute('allowtransparency', 'true');
-  iframe.style.cssText = 'position:absolute;width:190%;height:190%;top:-45%;left:-25%;border:none;pointer-events:none;z-index:0;opacity:0;transition:opacity 1.2s ease;';
+  iframe.style.cssText = 'position:absolute;width:190%;height:190%;top:-45%;left:-25%;border:none;pointer-events:none;z-index:0;opacity:0;transition:opacity 2.5s ease;';
 
   var fallbackTimer = setTimeout(function() {
     // Spline demorou demais — mostrar SVG fallback
-    document.getElementById('heartOuter').style.display = 'block';
+    var hOuter = document.getElementById('heartOuter');
+    var hFallback = document.getElementById('heartFallback');
+    hOuter.style.display = 'block';
+    // allow CSS transition to animate in
+    requestAnimationFrame(function() {
+      hFallback.style.opacity = '1';
+    });
     if (ph && ph.parentNode) ph.style.display = 'none';
   }, 8000);
 
@@ -619,7 +627,6 @@ setTimeout(function() {
 
   wrapper.appendChild(iframe);
 }, 800);
-// window._go = applyFrac;
 </script>
 </body>
 </html>
