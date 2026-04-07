@@ -199,11 +199,7 @@
 <div class="stage">
   <!-- Wrapper faz overflow:hidden no Spline sem quebrar o stage -->
   <div id="splineWrapper">
-    <iframe id="splineHeart"
-      src="https://my.spline.design/hearthealthhudfuturisticuidesign-93eAnzysBJHcHg87NPt5hzqG/?bg=false"
-      frameborder="0"
-      allowtransparency="true"
-    ></iframe>
+    <div id="splinePlaceholder" style="position:absolute;inset:0;background:radial-gradient(ellipse at 45% 45%,#1a0505 0%,#050508 70%)"></div>
   </div>
 
   <canvas id="cv"></canvas>
@@ -598,6 +594,25 @@ window.scrollTo({top:0,behavior:'instant'});
 cur = 0;
 show(0);
 handlers[0]();
+// Lazy-load Spline após 800ms (não bloqueia LCP)
+setTimeout(function() {
+  var wrapper = document.getElementById('splineWrapper');
+  var ph = document.getElementById('splinePlaceholder');
+  var iframe = document.createElement('iframe');
+  iframe.id = 'splineHeart';
+  iframe.src = 'https://my.spline.design/hearthealthhudfuturisticuidesign-93eAnzysBJHcHg87NPt5hzqG/?bg=false';
+  iframe.frameBorder = '0';
+  iframe.setAttribute('allowtransparency', 'true');
+  iframe.style.cssText = 'position:absolute;width:190%;height:190%;top:-45%;left:-25%;border:none;pointer-events:none;z-index:0;opacity:0;transition:opacity 1.2s ease;';
+
+  // Task 9 will add fallback — for now just load and fade in
+  iframe.onload = function() {
+    iframe.style.opacity = '0.92';
+    if (ph && ph.parentNode) ph.remove();
+  };
+
+  wrapper.appendChild(iframe);
+}, 800);
 // Expor applyFrac para debug (substitui _show)
 window._go = applyFrac;
 </script>
